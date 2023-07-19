@@ -1,0 +1,194 @@
+[
+    {
+        "id": 1,
+        "name": "CABA",
+        "afip_code": 0,
+        "codigo31662": "AR-C",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 2,
+        "name": "Buenos Aires",
+        "afip_code": 1,
+        "codigo31662": "AR-B",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 3,
+        "name": "Catamarca",
+        "afip_code": 2,
+        "codigo31662": "AR-K",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 4,
+        "name": "CÃ³rdoba",
+        "afip_code": 3,
+        "codigo31662": "AR-X",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 5,
+        "name": "Corrientes",
+        "afip_code": 4,
+        "codigo31662": "AR-W",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 6,
+        "name": "Entre RÃ­os",
+        "afip_code": 5,
+        "codigo31662": "AR-E",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 7,
+        "name": "Jujuy",
+        "afip_code": 6,
+        "codigo31662": "AR-Y",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 8,
+        "name": "Mendoza",
+        "afip_code": 7,
+        "codigo31662": "AR-M",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 9,
+        "name": "La Rioja",
+        "afip_code": 8,
+        "codigo31662": "AR-F",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 10,
+        "name": "Salta",
+        "afip_code": 9,
+        "codigo31662": "AR-A",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 11,
+        "name": "San Juan",
+        "afip_code": 10,
+        "codigo31662": "AR-J",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 12,
+        "name": "San Luis",
+        "afip_code": 11,
+        "codigo31662": "AR-D",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 13,
+        "name": "Santa Fe",
+        "afip_code": 12,
+        "codigo31662": "AR-S",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 14,
+        "name": "Santiago del Estero",
+        "afip_code": 13,
+        "codigo31662": "AR-G",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 15,
+        "name": "TucumÃ¡n",
+        "afip_code": 14,
+        "codigo31662": "AR-T",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 16,
+        "name": "Chaco",
+        "afip_code": 16,
+        "codigo31662": "AR-H",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 17,
+        "name": "Chubut",
+        "afip_code": 17,
+        "codigo31662": "AR-U",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 18,
+        "name": "Formosa",
+        "afip_code": 18,
+        "codigo31662": "AR-P",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 19,
+        "name": "Misiones",
+        "afip_code": 19,
+        "codigo31662": "AR-N",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 20,
+        "name": "NeuquÃ©n",
+        "afip_code": 20,
+        "codigo31662": "AR-Q",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 21,
+        "name": "La Pampa",
+        "afip_code": 21,
+        "codigo31662": "AR-L",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 22,
+        "name": "RÃ­o Negro",
+        "afip_code": 22,
+        "codigo31662": "AR-R",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 23,
+        "name": "Santa Cruz",
+        "afip_code": 23,
+        "codigo31662": "AR-Z",
+        "created_at": null,
+        "updated_at": null
+    },
+    {
+        "id": 24,
+        "name": "Tierra del Fuego",
+        "afip_code": 24,
+        "codigo31662": "AR-V",
+        "created_at": null,
+        "updated_at": null
+    }
+]
