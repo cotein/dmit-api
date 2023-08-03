@@ -24,11 +24,12 @@ return [
 
     'allowed_methods' => ['POST', 'PUT', 'PATCH', 'GET', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['http://localhost:9000', 'http://localhost:5173'],
+    'allowed_origins' => ['http://localhost:5173'],
 
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => [
+        'Access-Control-Allow-Origin',
         'Access-Control-Allow-Headers',
         'Origin',
         'crossDomain',
@@ -39,7 +40,6 @@ return [
         'Access-Control-Request-Method',
         'Access-Control-Request-Headers',
         'Access-Control-Allow-Methods',
-        'Access-Control-Allow-Origin'
     ],
 
     'exposed_headers' => [],

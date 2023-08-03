@@ -24,7 +24,7 @@ class CreateCompaniesTable extends Migration
             $table->integer('afip_type')->unsigned()->nullable(); //física - jurídica
             $table->integer('afip_inscription_id')->unsigned()->nullable();
             $table->integer('afip_document_id')->unsigned()->nullable();
-            $table->text('afip_data')->nullable();
+            $table->json('afip_data')->nullable();
             $table->boolean('percep_iibb')->default(0);
             $table->boolean('percep_iva')->default(0);
             $table->boolean('ret_suss')->default(0);

@@ -19,6 +19,10 @@ class EmailVerificationController extends Controller
     {
         $user = User::find($id);
 
+        $user->active = 1;
+
+        $user->save();
+
         if ($user->email_verified_at) {
             return response()->json('Cuenta ya verificada, inicie sesión en el Sistema', 200);
         }
@@ -36,5 +40,15 @@ class EmailVerificationController extends Controller
         }
 
         return response()->json('Email verificado, ya puede iniciar sesión en el Sistema', 200);
+    }
+
+    function resend(Request $request)
+    {
+
+        $user = User::find($request->id);
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json('Re-envío de verificación de cuenta exitosa.', 200);
     }
 }

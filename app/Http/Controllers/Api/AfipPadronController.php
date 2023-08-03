@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
+use App\Models\User;
+use Cotein\ApiAfip\Facades\Afip;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Cotein\ApiAfip\Facades\AfipWebService;
+use Carbon\Carbon;
 
 class AfipPadronController extends Controller
 {
@@ -13,12 +14,26 @@ class AfipPadronController extends Controller
 
     public function getCompanyDataByPadron()
     {
-        $this->padron = AfipWebService::findWebService('PADRON');
-        Log::info($this->padron);
-    }
 
-    public function getCompanyDataByConstancia()
-    {
-        $this->padron = AfipWebService::findWebService('CONSTANCIA');
+        try {
+
+            $user = (auth()->user()) ? auth()->user() : User::find(1);
+
+            $this->padron = Afip::findWebService('constancia', 'PRODUCTION', $user->company->afip_number, $user->company->id, $user->id);
+
+            $consulta =  [
+                'token' => $this->padron->token,
+                'sign'  => $this->padron->sign,
+                'cuitRepresentada'  => $this->padron->cuitRepresentada,
+                'idPersona'         => request()->cuit
+            ];
+
+            return $this->padron->getPersona($consulta);
+        } catch (\Exception $e) {
+            $date = new Carbon();
+            Log::alert('Fecha ' . $date->now() . ' code' . $e->getCode(), ' message ' . $e->getMessage());
+
+            throw $e;
+        }
     }
 }

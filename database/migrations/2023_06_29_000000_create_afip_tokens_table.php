@@ -16,7 +16,7 @@ class CreateAfipTokensTable extends Migration
     {
         Schema::create('afip_tokens', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('name', 191)->nullable();
+            $table->string('ws', 191)->nullable();
             $table->string('environment', 191)->nullable();
             $table->string('unique_id', 191)->nullable();
             $table->longText('token')->nullable();

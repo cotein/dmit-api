@@ -45,9 +45,24 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail
         'email_verified_at' => 'datetime',
     ];
 
+    /** Relations ship */
     public function company(): BelongsTo
     {
 
         return $this->belongsTo(Company::class);
+    }
+
+    public function myCompany(): ?int
+    {
+        return $this->company_id;
+    }
+
+    public function isActive(): bool
+    {
+        if ($this->active && $this->hasVerifiedEmail()) {
+            return true;
+        }
+
+        return false;
     }
 }

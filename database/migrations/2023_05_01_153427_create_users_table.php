@@ -24,7 +24,7 @@ class CreateUsersTable extends Migration
             $table->boolean('confirmed')->default(0);
             $table->string('confirmation_code')->nullable();
             $table->integer('type_user_id')->unsigned()->default(1);
-            $table->integer('company_id')->unsigned()->nullable()->default(1);
+            $table->integer('company_id')->unsigned()->nullable()->default();
             $table->dateTime('email_verified_at')->nullable();
             $table->timestamps();
             $table->softDeletes();

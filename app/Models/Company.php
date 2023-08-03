@@ -11,6 +11,10 @@ class Company extends Model implements Auditable
 {
     use HasFactory, \OwenIt\Auditing\Auditable;
 
+    protected $casts = [
+        'afip_data' => 'array'
+    ];
+
     function users(): HasMany
     {
 

@@ -1,8 +1,0 @@
-POST http://localhost:8001/api/register
-
-{
-    "name": "Diego",
-    "last_name": "Barrueta",
-    "email": "www@www.com",
-    "password": 123456
-}

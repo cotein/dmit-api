@@ -14,37 +14,35 @@ class RolesTableSeeder extends Seeder
      */
     public function run()
     {
-        
+
 
         \DB::table('roles')->delete();
-        
-        \DB::table('roles')->insert(array (
-            0 => 
-            array (
+
+        \DB::table('roles')->insert(array(
+            0 =>
+            array(
                 'id' => 1,
                 'name' => 'CONTADOR',
-                'guard_name' => 'web',
+                'guard_name' => 'api',
                 'created_at' => '2023-07-15 13:30:02',
                 'updated_at' => '2023-07-15 13:30:02',
             ),
-            1 => 
-            array (
+            1 =>
+            array(
                 'id' => 2,
                 'name' => 'COMPAÑIA',
-                'guard_name' => 'web',
+                'guard_name' => 'api',
                 'created_at' => '2023-07-15 13:30:02',
                 'updated_at' => '2023-07-15 13:30:02',
             ),
-            2 => 
-            array (
+            2 =>
+            array(
                 'id' => 3,
                 'name' => 'USUARIO',
-                'guard_name' => 'web',
+                'guard_name' => 'api',
                 'created_at' => '2023-07-15 13:50:39',
                 'updated_at' => '2023-07-15 13:50:39',
             ),
         ));
-        
-        
     }
 }

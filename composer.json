@@ -21,6 +21,7 @@
         "orangehill/iseed": "^3.0",
         "owen-it/laravel-auditing": "^13.5",
         "socialiteproviders/mercadolibre": "^4.1",
+        "spatie/laravel-activitylog": "^4.7",
         "spatie/laravel-fractal": "^6.0",
         "spatie/laravel-permission": "^5.10"
     },

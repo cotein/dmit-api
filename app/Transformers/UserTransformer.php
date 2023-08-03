@@ -25,6 +25,26 @@ class UserTransformer extends TransformerAbstract
         //
     ];
 
+    private function userHasCompany($user): bool
+    {
+
+        return ($user->company)
+            ? true
+            : false;
+    }
+
+    private function setCompanyData($user): array
+    {
+
+        return [
+            'id' => $user->company->id,
+            'cuit' => $user->company->afip_number,
+            'inscription' => $user->company->afip_inscription_id,
+            'document' => $user->company->afip_document_id,
+            'environment' => $user->company->environment,
+            'ptoVtaFe' => $user->company->pto_vta_fe
+        ];
+    }
     /**
      * A Fractal transformer.
      *
@@ -36,8 +56,7 @@ class UserTransformer extends TransformerAbstract
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'company_cuit' => $user->company->cuit,
-            'company_id' => $user->company_id
+            'company' => ($this->userHasCompany($user)) ? $this->setCompanyData($user) : false,
         ];
     }
 }

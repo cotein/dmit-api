@@ -1,24 +1,20 @@
 <?php
 
-use App\Models\User;
-use App\Models\Company;
-use Spatie\Permission\Models\Role;
+use App\Http\Controllers\Api\AfipPadronController;
+use Cotein\ApiAfip\Afip\WS\WSCONSTANCIAINSCRIPCION;
+use Cotein\ApiAfip\Afip\WS\WSPUC13;
+use Cotein\ApiAfip\Facades\Afip;
 use Illuminate\Support\Facades\Route;
-use Spatie\Permission\Models\Permission;
 
 Route::middleware(['cors'])->group(function () {
     Route::get('/', function () {
-        Permission::create(['name' => 'FACTURAR']);
-        Permission::create(['name' => 'CREAR COMPAÑIA']);
-        Permission::create(['name' => 'ELIMINAR FACTURA']);
-        Permission::create(['name' => 'CREAR USUARIO']);
-        Role::create(['name' => 'USUARIO']);
 
-        /* $invoiceFactoryClass = InvoiceFactory::createInvoice(1, 1, 1);
-        $invoiceFactory = new $invoiceFactoryClass;
-        $items = [];
-        dd($invoiceFactory->createInvoice()->processItems()); */
-        //ésto devuelve un array que luego se lo paso al WSFEV1
+        $a = Afip::findWebService('CONSTANCIA', 'production', 20227339730, 1, 1);
+        //$a = new WSCONSTANCIAINSCRIPCION('production', 20227339730, 1, 1);
+        dd($a->functions());
+        $pp = new AfipPadronController();
+        $r = $pp->getCompanyDataByPadron();
+        dd($r);
         return view('welcome');
     });
 });
