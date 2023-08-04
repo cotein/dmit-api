@@ -21,7 +21,8 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        ddd($request->all());
+        $pp = app('CompanyRepositoryWriteable')->create($request);
+        return response()->json($pp, 200);
     }
 
     /**

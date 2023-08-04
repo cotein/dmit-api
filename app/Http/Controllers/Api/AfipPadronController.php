@@ -14,7 +14,6 @@ class AfipPadronController extends Controller
 
     public function getCompanyDataByPadron()
     {
-
         try {
 
             $user = (auth()->user()) ? auth()->user() : User::find(1);

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Transformers\UserTransformer;
 
 class UserController extends Controller
@@ -13,6 +15,7 @@ class UserController extends Controller
      */
     public function index()
     {
+        Log::info('Auth::guard()->check() ' .  request()->user()->id);
         if (auth('api')->user()->company) {
 
             $user = fractal(auth('api')->user(), new UserTransformer())->toArray()['data'];
