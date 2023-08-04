@@ -21,7 +21,7 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        Log::info('pppppppppppppppppp');
+        ddd($request->all());
     }
 
     /**
