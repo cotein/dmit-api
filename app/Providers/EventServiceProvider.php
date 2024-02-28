@@ -22,6 +22,9 @@ class EventServiceProvider extends ServiceProvider
             // ... other providers
             \SocialiteProviders\MercadoLibre\MercadoLibreExtendSocialite::class . '@handle',
         ],
+        \App\Events\CreatedInvoice::class => [
+            \App\Listeners\SaveInvoice::class
+        ]
     ];
 
     /**

@@ -2,18 +2,23 @@
 
 namespace App\Models;
 
+use App\Src\Traits\CompanyTrait;
+use Spatie\MediaLibrary\HasMedia;
 use Laravel\Passport\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use OwenIt\Auditing\Contracts\Auditable;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Spatie\Image\Manipulations;
 
-class User extends Authenticatable implements Auditable, MustVerifyEmail
+class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMedia
 {
-    use HasApiTokens, HasFactory, Notifiable, \OwenIt\Auditing\Auditable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, \OwenIt\Auditing\Auditable, HasRoles, InteractsWithMedia, CompanyTrait;
 
     /**
      * The attributes that are mass assignable.
@@ -46,21 +51,32 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail
     ];
 
     /** Relations ship */
-    public function company(): BelongsTo
+    public function companies(): BelongsToMany
     {
 
-        return $this->belongsTo(Company::class);
-    }
-
-    public function myCompany(): ?int
-    {
-        return $this->company_id;
+        return $this->belongsToMany(Company::class);
     }
 
     public function isActive(): bool
     {
         if ($this->active && $this->hasVerifiedEmail()) {
             return true;
+        }
+
+        return false;
+    }
+
+    public function hasCompany(): bool
+    {
+        return ($this->companies()->exists())
+            ? true
+            : false;
+    }
+
+    public function listMyCompanies()
+    {
+        if ($this->hasCompany()) {
+            return $this->setMyCompanies($this);
         }
 
         return false;

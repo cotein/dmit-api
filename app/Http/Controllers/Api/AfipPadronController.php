@@ -15,22 +15,32 @@ class AfipPadronController extends Controller
     public function getCompanyDataByPadron()
     {
         try {
+            $ws = 'constancia';
+
+            if (strlen((string) request()->cuit) < 11) {
+                $ws = 'padron';
+            }
 
             $user = (auth()->user()) ? auth()->user() : User::find(1);
 
-            $this->padron = Afip::findWebService('constancia', 'PRODUCTION', $user->company->afip_number, $user->company->id, $user->id);
+            if (!$user->company) {
 
-            $consulta =  [
-                'token' => $this->padron->token,
-                'sign'  => $this->padron->sign,
-                'cuitRepresentada'  => $this->padron->cuitRepresentada,
-                'idPersona'         => request()->cuit
-            ];
+                $this->padron = Afip::findWebService($ws, 'PRODUCTION', 20227339730, 1, 1);
+            } else {
 
-            return $this->padron->getPersona($consulta);
+                $this->padron = Afip::findWebService($ws, 'PRODUCTION', $user->company->afip_number, $user->company->id, $user->id);
+            }
+
+            if ($ws === 'constancia') {
+                return $this->padron->getPersona(request()->cuit);
+            }
+
+            if ($ws === 'padron') {
+                return $this->padron->getPersonaByDocumento(request()->cuit);
+            }
         } catch (\Exception $e) {
             $date = new Carbon();
-            Log::alert('Fecha ' . $date->now() . ' code' . $e->getCode(), ' message ' . $e->getMessage());
+            Log::alert('Fecha ' . $date->now() . ' code' . $e->getCode() . ' message ' . $e->getMessage());
 
             throw $e;
         }

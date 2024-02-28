@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class Company extends Model implements Auditable
@@ -15,9 +17,29 @@ class Company extends Model implements Auditable
         'afip_data' => 'array'
     ];
 
-    function users(): HasMany
+    function users(): BelongsToMany
     {
 
-        return $this->hasMany(User::class, 'company_id', 'id');
+        return $this->belongsToMany(User::class);
+    }
+
+    public function address()
+    {
+        return $this->morphOne(Address::class, 'addressable');
+    }
+
+    public function afipInscription(): HasOne
+    {
+        return $this->hasOne(AfipInscription::class, 'id', 'afip_inscription_id');
+    }
+
+    public function afipDocument(): HasOne
+    {
+        return $this->hasOne(AfipDocument::class, 'id', 'afip_document_id');
+    }
+
+    public function afip_vouchers(): HasMany
+    {
+        return $this->hasMany(AfipVoucher::class, 'inscription_id', 'afip_inscription_id');
     }
 }

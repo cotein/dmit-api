@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Transformers\UserTransformer;
+use Illuminate\Support\Collection;
 
 class UserController extends Controller
 {
@@ -15,15 +16,10 @@ class UserController extends Controller
      */
     public function index()
     {
-        Log::info('Auth::guard()->check() ' .  request()->user()->id);
-        if (auth('api')->user()->company) {
 
-            $user = fractal(auth('api')->user(), new UserTransformer())->toArray()['data'];
+        $user = fractal(auth('api')->user(), new UserTransformer())->toArray()['data'];
 
-            return response()->json($user, 200);
-        }
-
-        return response()->json(auth('api')->user(), 200);
+        return response()->json($user, 200);
     }
 
     /**
@@ -56,5 +52,25 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function uploadAvatar()
+    {
+        $company = json_decode(request()->company);
+
+        if (request()->avatar) {
+
+            $user = request()->user();
+
+            $user->clearMediaCollection('avatar');
+
+            $user->addMedia(request()->avatar)
+                ->withCustomProperties(['company_id' => $company->id, 'user_id' => auth()->user()->id])
+                ->toMediaCollection('avatar');
+
+            return response()->json($user->getMedia('avatar')->first()->getFullUrl(), 201);
+        }
+
+        throw new \Exception('Hubo un error al intentar subir su avatart', 431);
     }
 }

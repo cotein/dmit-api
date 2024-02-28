@@ -14,7 +14,7 @@ class CreateSalesInvoicesTable extends Migration
      */
     public function up()
     {
-        Schema::create('sales_invoices', function (Blueprint $table) {
+        Schema::create('sale_invoices', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('company_id')->unsigned()->nullable();
             $table->integer('customer_id')->unsigned()->nullable();
@@ -22,17 +22,22 @@ class CreateSalesInvoicesTable extends Migration
             $table->integer('pto_vta')->unsigned()->nullable();
             $table->integer('cbte_desde')->unsigned()->nullable();
             $table->integer('cbte_hasta')->unsigned()->nullable();
-            $table->string('cbte_fch', 100)->nullable();
+            $table->date('cbte_fch')->nullable();
             $table->string('cae', 100)->nullable();
-            $table->string('cae_fch_vto', 100)->nullable();
-            $table->integer('status_id')->unsigned()->nullable();
+            $table->date('cae_fch_vto')->nullable();
             $table->integer('user_id')->unsigned()->nullable();
             $table->text('afip_data')->nullable();
             $table->timestamps();
-            $table->string('vto_payment', 191)->nullable();
+            $table->date('vto_payment')->nullable();
             $table->string('commercial_reference', 191)->nullable();
             $table->integer('payment_type_id')->unsigned()->nullable();
+            $table->integer('sales_condition_id')->unsigned()->nullable();
+            $table->integer('status_id')->unsigned()->nullable();
+            $table->date('fch_serv_desde')->nullable();
+            $table->date('fch_serv_hasta')->nullable();
             $table->integer('parent_id')->unsigned()->nullable();
+
+            $table->index(['cbte_desde', 'customer_id', 'company_id']);
         });
     }
 
@@ -44,6 +49,6 @@ class CreateSalesInvoicesTable extends Migration
      */
     public function down()
     {
-        Schema::drop('sales_invoices');
+        Schema::drop('sale_invoices');
     }
 }

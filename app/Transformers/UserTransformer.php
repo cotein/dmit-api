@@ -25,17 +25,8 @@ class UserTransformer extends TransformerAbstract
         //
     ];
 
-    private function userHasCompany($user): bool
-    {
-
-        return ($user->company)
-            ? true
-            : false;
-    }
-
     private function setCompanyData($user): array
     {
-
         return [
             'id' => $user->company->id,
             'cuit' => $user->company->afip_number,
@@ -54,9 +45,11 @@ class UserTransformer extends TransformerAbstract
     {
         return [
             'id' => $user->id,
-            'name' => $user->name,
+            'name' => strtoupper($user->name),
             'email' => $user->email,
-            'company' => ($this->userHasCompany($user)) ? $this->setCompanyData($user) : false,
+            'isActive' => $user->isActive(),
+            'companies' => $user->listMyCompanies(),
+            'avatar' => ($user->getMedia('avatar')->first()) ? $user->getMedia('avatar')->first()->getFullUrl() : '/src/assets/img/avatar/chat-auth.png'
         ];
     }
 }

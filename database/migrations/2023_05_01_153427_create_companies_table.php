@@ -42,7 +42,10 @@ class CreateCompaniesTable extends Migration
             $table->integer('pto_vta_remito')->unsigned()->nullable();
             $table->integer('pto_vta_remito_exterior')->unsigned()->nullable();
             $table->integer('pto_vta_recibo')->unsigned()->nullable();
+            $table->integer('billing_concept')->unsigned()->nullable();
             $table->timestamps();
+
+            $table->index(['name', 'afip_number']);
         });
     }
 

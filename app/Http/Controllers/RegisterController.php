@@ -13,12 +13,14 @@ class RegisterController extends Controller
     public function register(RegisterUserFormRequest $request): \Illuminate\Http\JsonResponse
     {
         try {
-            $user = User::create([
-                'name' => $request->user['name'],
-                'last_name' => $request->user['lastName'],
-                'email' => $request->user['email'],
-                'password' => Hash::make($request->user['password'])
-            ], 201);
+            $user = new User;
+
+            $user->name = strtoupper($request->user['name']);
+            $user->last_name = strtoupper($request->user['lastName']);
+            $user->email = $request->user['email'];
+            $user->password = Hash::make($request->user['password']);
+
+            $user->save();
 
             $user->sendEmailVerificationNotification();
 

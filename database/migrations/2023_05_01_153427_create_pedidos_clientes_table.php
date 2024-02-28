@@ -18,16 +18,14 @@ class CreatePedidosClientesTable extends Migration
             $table->increments('id');
             $table->integer('customer_id')->unsigned()->nullable();
             $table->string('code', 100)->nullable();
-            $table->string('meli_id', 191)->nullable();
             $table->integer('number')->unsigned()->nullable();
             $table->date('delivery_date')->nullable();
-            $table->float('total')->nullable()->default(0.00);
             $table->integer('status_id')->unsigned()->nullable();
             $table->integer('user_id')->unsigned()->nullable();
-            $table->text('meli_data')->nullable();
+            $table->integer('company_id')->unsigned()->nullable();
             $table->timestamps();
-            $table->integer('voucher_id')->unsigned()->default(101);
-            $table->integer('parent_id')->unsigned()->nullable();
+
+            $table->index(['number', 'customer_id', 'company_id']);
         });
     }
 

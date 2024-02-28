@@ -2,12 +2,23 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Src\Constantes;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
+use App\Src\Repositories\CompanyRepository;
+use App\Src\Traits\CompanyTrait;
+use Exception;
 
 class CompanyController extends Controller
 {
+    use CompanyTrait;
+
+    private $companyRepository;
+
+    function __construct(CompanyRepository $companyRepository)
+    {
+        $this->companyRepository = $companyRepository;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -21,8 +32,24 @@ class CompanyController extends Controller
      */
     public function store(Request $request)
     {
-        $pp = app('CompanyRepositoryWriteable')->create($request);
-        return response()->json($pp, 200);
+        try {
+
+            $company = $this->companyRepository->store($request);
+
+            $company->users()->sync(auth('api')->user()->id);
+
+            $companies = $this->setMyCompanies(auth()->user());
+
+            return response()->json($companies, 201);
+        } catch (\Exception $e) {
+
+            activity(Constantes::ERROR_AL_CREAR_COMPAÑIA)
+                ->causedBy(auth('api')->user())
+                ->withProperties($request->all())
+                ->log($e->getMessage());
+
+            throw new Exception($e->getMessage(), $e->getCode());
+        }
     }
 
     /**
@@ -36,9 +63,11 @@ class CompanyController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request)
     {
-        //
+        $company = $this->companyRepository->update($request);
+
+        return response()->json($company, 200);
     }
 
     /**

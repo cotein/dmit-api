@@ -4,10 +4,11 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-use App\Models\Company;
-use App\Models\User;
+use App\Src\Constantes;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
+use Database\Factories\StatusFactory;
+use Database\Factories\CompanyFactory;
+use Database\Factories\CompanyTypeFactory;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,22 +17,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $company = new Company;
-        $company->name = 'DMIT';
-        $company->last_name = '';
-        $company->fantasy_name = 'DMIT';
-        $company->dni = 22733973;
-        $company->afip_number = 20227339730;
-        $company->save();
+        CompanyTypeFactory::times(1)->create(['name' => 'JURÍDICA']);
+        CompanyTypeFactory::times(1)->create(['name' => 'FÍSICA']);
 
-        $DmItUser = new User;
-        $DmItUser->name = 'DMIT';
-        $DmItUser->last_name = '';
-        $DmItUser->email = 'dmit@gmail.com';
-        $DmItUser->password = Hash::make('secret');
-        $DmItUser->active = true;
-        $DmItUser->company_id = 1;
-        $DmItUser->save();
+        StatusFactory::times(1)->create(['name' => 'ADEUDA', 'level' => 100]);
+        StatusFactory::times(1)->create(['name' => 'PARCIALMENTE CANCELADA', 'level' => 200]);
+        StatusFactory::times(1)->create(['name' => 'CANCELADA', 'level' => 300]);
 
         /**Afip Seeder */
         $this->call(AfipInscriptionSeeder::class);
@@ -39,10 +30,14 @@ class DatabaseSeeder extends Seeder
         $this->call(AfipMoneyTableSeeder::class);
         $this->call(AfipStatesTableSeeder::class);
         $this->call(AfipVouchersTableSeeder::class);
+        $this->call(AfipDocumentsTableSeeder::class);
 
         /** Others seeders */
         $this->call(BanksTableSeeder::class);
         $this->call(RolesTableSeeder::class);
         $this->call(PermissionsTableSeeder::class);
+        $this->call(AfipDocumentsTableSeeder::class);
+        $this->call(CompanyBillingConceptsTableSeeder::class);
+        $this->call(SaleConditionSeeder::class);
     }
 }

@@ -25,8 +25,11 @@ class CreateRemitosTable extends Migration
             $table->integer('payment_type_id')->unsigned()->nullable();
             $table->integer('status_id')->unsigned()->nullable();
             $table->integer('user_id')->unsigned()->nullable();
+            $table->integer('company_id')->unsigned()->nullable();
             $table->float('total', 14, 2)->unsigned()->nullable();
             $table->integer('customer_id')->unsigned()->nullable();
+
+            $table->index(['number', 'customer_id', 'company_id']);
         });
     }
 

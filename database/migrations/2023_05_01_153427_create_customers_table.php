@@ -17,10 +17,13 @@ class CreateCustomersTable extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name', 100)->nullable();
+            $table->string('last_name', 100)->nullable();
+            $table->string('fantasy_name', 100)->nullable();
             $table->string('dni', 11)->nullable();
             $table->string('afip_number', 11)->nullable();
             $table->integer('afip_inscription_id')->unsigned()->nullable();
             $table->integer('afip_document_id')->unsigned()->nullable();
+            $table->integer('afip_type')->unsigned()->nullable();
             $table->string('contact', 191)->nullable();
             $table->text('afip_data')->nullable();
             $table->timestamps();
@@ -35,6 +38,10 @@ class CreateCustomersTable extends Migration
             $table->string('meli_nick', 191)->nullable();
             $table->integer('pay_condition')->unsigned()->nullable();
             $table->integer('customer_type_id')->unsigned()->nullable()->default(1);
+            $table->integer('company_id')->unsigned()->nullable();
+            $table->integer('user_id')->unsigned()->nullable();
+
+            $table->index(['name', 'afip_number']);
         });
     }
 

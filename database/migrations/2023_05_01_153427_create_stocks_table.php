@@ -20,7 +20,11 @@ class CreateStocksTable extends Migration
             $table->integer('variation_id')->unsigned()->default(1);
             $table->integer('quantity')->default(1);
             $table->string('motive', 191)->default(1);
+            $table->integer('company_id')->unsigned();
+            $table->integer('user_id')->unsigned();
             $table->timestamps();
+
+            $table->index(['product_id', 'variation_id', 'company_id']);
         });
     }
 

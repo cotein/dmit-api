@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateCategoriesTable extends Migration
 {
-
     /**
      * Run the migrations.
      *
@@ -24,6 +23,8 @@ class CreateCategoriesTable extends Migration
             $table->timestamps();
             $table->text('attributes')->nullable();
             $table->boolean('active')->nullable()->default(1);
+            $table->integer('company_id');
+            $table->integer('user_id');
         });
     }
 

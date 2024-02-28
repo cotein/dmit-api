@@ -19,7 +19,7 @@ class CompanyFactory extends Factory
         return [
             'name' => fake()->name(),
             'last_name' => fake()->lastName(),
-            'fantasyName' => fake()->name(),
+            'fantasy_name' => fake()->name(),
             'dni' => fake()->numberBetween(20000000, 40000000),
             'afip_number' => fake()->randomNumber([20, 30, 27]) . fake()->numberBetween(20000000, 40000000) . fake()->numberBetween(1, 9)
         ];

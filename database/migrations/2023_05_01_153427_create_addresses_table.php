@@ -31,6 +31,8 @@ class CreateAddressesTable extends Migration
             $table->boolean('active')->nullable()->default(1);
             $table->string('between_streets', 191)->nullable();
             $table->timestamps();
+
+            $table->index(['state_id', 'city']);
         });
     }
 
