@@ -4,7 +4,6 @@ namespace App\Src\Helpers;
 
 class Afip
 {
-
     public static function getErrValues($res)
     {
         $json = json_encode($res);
@@ -27,18 +26,37 @@ class Afip
             }
         }
 
-        foreach ($array as $clave => $valor) {
-            if ($clave === "Observaciones") {
-                $errValues[] = $array[$clave]['Obs'][0];
-            } elseif (is_array($valor)) {
-                $nestedErrValues = self::getErrValues($valor);
-            }
-        }
-
         if (empty($errValues)) {
             return false;
         } else {
             return $errValues;
+        }
+    }
+
+    public static function getObservaciones($res)
+    {
+        $json = json_encode($res);
+
+        $array = json_decode($json, TRUE);
+
+        $observacionesValues = [];
+
+        foreach ($array as $clave => $valor) {
+            if ($clave === "Observaciones") {
+                $observacionesValues[] = $array[$clave]['Obs'][0];
+            } elseif (is_array($valor)) {
+                $nestedobservacionesValues = self::getObservaciones($valor);
+
+                if (!empty($nestedobservacionesValues)) {
+                    $observacionesValues = array_merge($observacionesValues, $nestedobservacionesValues);
+                }
+            }
+        }
+
+        if (empty($observacionesValues)) {
+            return false;
+        } else {
+            return $observacionesValues;
         }
     }
 }

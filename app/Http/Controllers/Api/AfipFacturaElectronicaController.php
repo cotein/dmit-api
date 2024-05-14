@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use Exception;
+use Carbon\Carbon;
 use App\Src\Constantes;
 use Illuminate\Http\Request;
 use App\Events\CreatedInvoice;
+use App\Src\Helpers\ActivityLog;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Src\Afip\WSFacturaElectronica;
-use App\Src\Helpers\Afip as HelpersAfip;
+use Spatie\Activitylog\Facades\LogBatch;
 use App\Exceptions\Afip\FEParamGetPtosVentaException;
-use Exception;
 
 class AfipFacturaElectronicaController extends Controller
 {
@@ -69,10 +71,31 @@ class AfipFacturaElectronicaController extends Controller
             'company_id' => 'required',
             'user_id' => 'required',
             'saleCondition' => 'required',
+            'paymentType' => 'required',
             'customer' => 'required',
-            'voucher_id' => 'required',
             'products' => 'required|array|min:1',
         ]);
+
+
+        $now = Carbon::now();
+
+        LogBatch::startBatch();
+
+        $batch_uuid = $now->timestamp . $now->milli;
+
+        $activity = [
+            'log_name' => 'SOLICITUD DE FACTURA ELECTRONICA',
+            'description' => 'SE UTILIZA WSFEV1 DE AFIP',
+            'subject_type' => null,
+            'subject_id' => null,
+            'causer_type' => 'App\Models\User;',
+            'causer_id' => auth()->user()->id,
+            'company_id' => $request->company_id,
+            'properties' => $request->all(),
+            'batch_uuid' => $batch_uuid
+        ];
+
+        ActivityLog::save($activity);
 
         $result =  $this->afipWS->FECAESolicitar($request);
 
@@ -85,25 +108,58 @@ class AfipFacturaElectronicaController extends Controller
             'user_id' => $request->user_id,
             'products' => $request->products,
             'saleCondition' => $request->saleCondition,
+            'paymentType' => $request->paymentType,
             'customer' => $request->customer,
             'comments' => $request->comments,
             'parent' => ($request->has('parent')) ? $request->parent : null,
             'result' => $result
         ];
 
-        /* $reject = json_decode(json_encode($result), true);
-
-        if ($reject['FECAESolicitarResult']['FeCabResp']['Resultado'] === 'R') {
+        $reject = json_decode(json_encode($result), true);
+        /*  Log::alert($reject);
+        print_r($reject); */
+        /* if ($reject['FECAESolicitarResult']['FeCabResp']['Resultado'] === 'R') {
             if (isset($reject['FECAESolicitarResult']['FECAEDetResponse'][0]['Observaciones'])) {
-                activity(Constantes::FECAESolicitar)
-                    ->causedBy(auth('api')->user())
-                    ->withProperties($reject);
+
                 $observaciones = $reject['FECAESolicitarResult']['FECAEDetResponse'][0]['Observaciones'];
+
+                $activity['log_name'] = Constantes::FECAESolicitar;
+
+                $activity['properties'] = $reject;
+
+                ActivityLog::save($activity);
+
                 throw new Exception($observaciones['Obs'][0]['Msg']);
             }
         } */
+        if ($reject['FECAESolicitarResult']['FeCabResp']['Resultado'] === 'R') {
+
+            if (isset($reject['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Observaciones'])) {
+
+                $observaciones = $reject['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Observaciones']['Obs'];
+                $mensajes = array_map(function ($observacion) {
+                    return $observacion['Msg'];
+                }, $observaciones);
+
+                $activity['log_name'] = Constantes::FECAESolicitar;
+
+                $activity['properties'] = $reject;
+
+                ActivityLog::save($activity);
+
+                throw new Exception(implode(', ', $mensajes));
+            }
+        }
 
         $invoice = CreatedInvoice::dispatch($invoiceData);
+
+        $activity['log_name'] = 'RESULTADO DE FACTURA ELECTRONICA';
+        $activity['properties'] = $result;
+
+        ActivityLog::save($activity);
+
+        LogBatch::getUuid(); // save batch id to retrieve activities later
+        LogBatch::endBatch();
 
         $data = [
             'CbteTipo' => $invoiceData['FeCabReq']['CbteTipo'],

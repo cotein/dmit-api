@@ -25,7 +25,7 @@ class AuthController extends Controller
             return response(['message' => 'Usuario no activado'], 400);
         }
 
-        $token = auth()->user()->createToken('API Token')->accessToken;
+        $token = auth()->user()->createToken('API Token DMIT')->accessToken;
 
         $user = fractal(auth()->user(), new UserTransformer())->toArray()['data'];
 

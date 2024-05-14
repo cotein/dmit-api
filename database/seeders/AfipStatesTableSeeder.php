@@ -17,7 +17,7 @@ class AfipStatesTableSeeder extends Seeder
     {
 
 
-        DB::table('states')->delete();
+        DB::table('states')->truncate();
 
         DB::table('states')->insert(array(
             0 =>

@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\SaleCondition;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class SaleConditionSeeder extends Seeder
 {
@@ -13,8 +12,9 @@ class SaleConditionSeeder extends Seeder
      */
     public function run(): void
     {
-        $salesCondition = [
+        DB::table('sale_conditions')->truncate();
 
+        DB::table('sale_conditions')->insert([
             [
                 'name'  => 'Contado',
                 'days' => 0,
@@ -36,15 +36,6 @@ class SaleConditionSeeder extends Seeder
                 'days' => 300000,
             ],
 
-        ];
-
-        $salesCondition = collect($salesCondition);
-
-        $salesCondition->each(function ($sc) {
-            SaleCondition::create([
-                'name'     => $sc['name'],
-                'days' => $sc['days'],
-            ]);
-        });
+        ]);
     }
 }

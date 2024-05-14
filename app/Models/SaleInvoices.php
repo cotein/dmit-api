@@ -39,13 +39,34 @@ class SaleInvoices extends Model
     {
         return $this->hasOne(SaleCondition::class, 'id', 'sales_condition_id');
     }
+
     public function comments(): HasOne
     {
         return $this->hasOne(SaleInvoicesComments::class, 'sale_invoice_id', 'id');
     }
 
+    public function children(): HasMany
+    {
+        return $this->hasMany(SaleInvoices::class, 'parent_id', 'id');
+    }
+
     public function parents(): HasMany
     {
         return $this->hasMany(SaleInvoices::class, 'id', 'parent_id');
+    }
+
+    public function paymentType(): HasOne
+    {
+        return $this->hasOne(PaymentType::class, 'id', 'payment_type_id');
+    }
+
+    public function receipts()
+    {
+        return $this->belongsToMany(Receipt::class);
+    }
+
+    public function cuentaCorriente()
+    {
+        return $this->morphOne(CustomerCuentaCorriente::class, 'cuotaable');
     }
 }

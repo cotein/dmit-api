@@ -42,4 +42,41 @@ class Company extends Model implements Auditable
     {
         return $this->hasMany(AfipVoucher::class, 'inscription_id', 'afip_inscription_id');
     }
+
+    public function customers(): HasMany
+    {
+        return $this->hasMany(Customer::class, 'company_id', 'id');
+    }
+
+    public function receipts(): HasMany
+    {
+        return $this->hasMany(Receipt::class);
+    }
+
+    public function customerCuentaCorriente(): HasMany
+    {
+        return $this->hasMany(CustomerCuentaCorriente::class);
+    }
+
+    public function getNextReceiptNumber()
+    {
+        $lastReceipt = $this->receipts()->latest('number')->first();
+
+        if ($lastReceipt) {
+            return $lastReceipt->number + 1;
+        } else {
+            return 1;
+        }
+    }
+
+    public function getNextCustomerCuentaCorrienteNumber()
+    {
+        $cuentaCorriente = $this->customerCuentaCorriente()->latest('number')->first();
+
+        if ($cuentaCorriente) {
+            return $cuentaCorriente->number + 1;
+        } else {
+            return 1;
+        }
+    }
 }

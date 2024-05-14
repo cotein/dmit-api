@@ -7,22 +7,34 @@ use App\Src\Constantes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use App\Src\Repositories\CustomerRepository;
 use App\Transformers\CustomerTransformer;
+use App\Src\Repositories\CustomerRepository;
+use App\Src\Repositories\CustomerCuentaCorrienteRepository;
+use App\Transformers\CustomerCuentaCorrienteTransformer;
 
 class CustomerController extends Controller
 {
     protected $customerRepository;
 
-    public function __construct(CustomerRepository $customerRepository)
+    protected $customerCuentaCorrienteRepository;
+
+    public function __construct(CustomerRepository $customerRepository, CustomerCuentaCorrienteRepository $customerCuentaCorrienteRepository)
     {
         $this->customerRepository = $customerRepository;
+        $this->customerCuentaCorrienteRepository = $customerCuentaCorrienteRepository;
     }
     /**
      * Display a listing of the resource.
      */
     public function index(Request $request)
     {
+
+        if ($request->has('is_customer_cuenta_corriente')) {
+            $cc = $this->customerCuentaCorrienteRepository->find($request);
+            $ccc = fractal($cc, new CustomerCuentaCorrienteTransformer())->toArray()['data'];
+            return response()->json($ccc, 200);
+        }
+
         $customers = $this->customerRepository->find($request);
 
         $customers = fractal($customers, new CustomerTransformer())->toArray()['data'];

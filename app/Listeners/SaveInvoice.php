@@ -2,36 +2,42 @@
 
 namespace App\Listeners;
 
-use App\Models\SaleInvoices;
+use App\Events\SavedInvoice;
 use App\Events\CreatedInvoice;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use App\Src\Repositories\ReceiptRepository;
 use App\Transformers\SaleInvoiceTransformer;
 use App\Src\Repositories\SaleInvoiceRepository;
 
 class SaveInvoice
 {
     protected $saleInvoiceRepository;
+
+    protected $receiptRepository;
     /**
      * Create the event listener.
      */
-    public function __construct(SaleInvoiceRepository $saleInvoiceRepository)
+    public function __construct(SaleInvoiceRepository $saleInvoiceRepository, ReceiptRepository $receiptRepository)
     {
         $this->saleInvoiceRepository = $saleInvoiceRepository;
+
+        $this->receiptRepository = $receiptRepository;
     }
 
     /**
      * Handle the event.
      */
-    public function handle(CreatedInvoice $event): array
+    public function handle(CreatedInvoice $event)
     {
         $data = $event->invoiceData;
 
         $invoice = $this->saleInvoiceRepository->store($data);
 
-        $invoice = fractal($invoice, new SaleInvoiceTransformer())->toArray()['data'];
+        $transformedInvoice = fractal($invoice, new SaleInvoiceTransformer())->toArray()['data'];
 
-        return $invoice;
+        $this->receiptRepository->store($invoice);
+
+        SavedInvoice::dispatch($transformedInvoice);
+
+        return $transformedInvoice;
     }
 }

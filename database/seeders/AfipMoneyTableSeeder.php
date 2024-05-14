@@ -17,7 +17,7 @@ class AfipMoneyTableSeeder extends Seeder
     {
 
 
-        DB::table('moneys')->delete();
+        DB::table('moneys')->truncate();
 
         DB::table('moneys')->insert(array(
             0 =>

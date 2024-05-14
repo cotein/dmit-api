@@ -6,30 +6,29 @@ use App\Models\AfipDocument;
 use App\Models\Customer;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CustomerRepository
 {
-    public function find(Request $request): Collection
+    public function find(Request $request)
     {
         $customers = Customer::query();
 
-        $customers = $customers->where('company_id', $request->company_id)
-            ->where('active', true);
+        $customers = $customers->where('company_id', (int) $request->company_id);
 
-        if ($request->has('name')) {
-            $customers = $customers->where('name', 'like', "%{$request->name}%")
-                ->orWhere('last_name', 'like', "%{$request->name}%")
-                ->orWhere('fantasy_name', 'like', "%{$request->name}%");
+        $customers = $customers->where('active', true);
+
+        if ($customers->count() === 0) {
+            return null;
         }
 
-        /* if ($request->has('isForSelect')) {
-            return $customers->get()->map(function ($c) {
-                return [
-                    'label' => ($c->last_name) ? $c->name . ' ' . $c->last_name,
-                    'value' => $c->id
-                ];
-            })->toArray();
-        } */
+        if ($request->has('name')) {
+            $customers = $customers->where(function ($query) use ($request) {
+                $query->where('name', 'like', "%{$request->name}%")
+                    ->orWhere('last_name', 'like', "%{$request->name}%")
+                    ->orWhere('fantasy_name', 'like', "%{$request->name}%");
+            });
+        }
         return $customers->get();
     }
 

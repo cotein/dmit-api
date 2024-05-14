@@ -30,6 +30,13 @@ class SaleInvoiceController extends Controller
             return response()->json($invoices, 200);
         }
 
+        if ($request->has('invoice_id')) {
+
+            $invoices = fractal($invoices, new SaleInvoiceTransformer())->toArray()['data'];
+
+            return response()->json($invoices, 200);
+        }
+
         $data = fractal($invoices, new SaleInvoiceTransformer())->toArray()['data'];
 
         $pagination = [

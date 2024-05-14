@@ -38,4 +38,18 @@ class Constantes
     const CONCEPTO_PRODUCTO = 1;
     const CONCEPTO_SERVICIOS = 2;
     const CONCEPTO_PRODUCTOS_Y_SERVICIOS = 3;
+
+    const RESPONSABLE_MONOTRIBUTO = 'Responsable Monotributo';
+    const IVA_SUJETO_EXENTO = 'IVA Sujeto Exento';
+    const IVA_RESPONSABLE_INSCRIPTO = 'IVA Responsable Inscripto';
+
+    ## CONDICION DE VENTA ##
+    const CONTADO = 1;
+
+    const IS_NOTA_CREDITO = [3, 8, 13, 20, 51, 94, 97, 100];
+
+    ## INSCRIPCION EN AFIP ##
+    const INSCRIPCION_RESPONSABLE_INSCRIPTO = 1;
+    const INSCRIPCION_CONSUMIDOR_FINAL = 5;
+    const INSCRIPCION_RESPONSABLE_MONOTRIBUTO = 6;
 }

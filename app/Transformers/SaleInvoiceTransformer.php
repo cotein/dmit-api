@@ -37,7 +37,9 @@ class SaleInvoiceTransformer extends TransformerAbstract
     protected function getCurrentIteration()
     {
         static $iteration = 0;
+
         $iteration++;
+
         return $iteration;
     }
 
@@ -54,6 +56,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 'iva_afip_code' => $item->iva->code,
                 'iva_id' => $item->iva->id,
                 'unit_price' => $item->unit_price,
+                //'unit_price' => number_format($item->neto_import / $item->quantity, 2, ',', '.'),
                 'total' => $item->total
             ];
         })->toArray();
@@ -186,14 +189,32 @@ class SaleInvoiceTransformer extends TransformerAbstract
         return false;
     }
 
+    private function formatInvoiceData(SaleInvoices $invoice): array
+    {
+        return [
+            'company_id' => $invoice->company->id,
+            'invoice_id' => $invoice->id,
+            'invoice' => $invoice->voucher->name . ' ' .  ZeroLeft::print($invoice->pto_vta, 4) . '-' . ZeroLeft::print($invoice->cbte_desde, 8) . ' $' . number_format($invoice->items->sum('total'), 2, ',', '.'),
+            'items' => $this->items($invoice)
+        ];
+    }
+
     private function parents(SaleInvoices $si): array
     {
         if ($si->parents) {
             return $si->parents->map(function ($invoice) {
-                return [
-                    'invoice_id' => $invoice->id,
-                    'invoice' => $invoice->voucher->name . ' ' .  ZeroLeft::print($invoice->pto_vta, 4) . '-' . ZeroLeft::print($invoice->cbte_desde, 8) . ' $' . number_format($invoice->items->sum('total'), 2, ',', '.'),
-                ];
+                return $this->formatInvoiceData($invoice);
+            })->toArray();
+        }
+
+        return [];
+    }
+
+    private function children(SaleInvoices $si): array
+    {
+        if ($si->children) {
+            return $si->children->map(function ($invoice) {
+                return $this->formatInvoiceData($invoice);
             })->toArray();
         }
 
@@ -229,6 +250,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
                     'state' => AfipState::where('afip_code', $si->company->address->state_id)->get()->first()->name
                 ]
             ],
+
             'customer' => [
                 'id' => $si->customer->id,
                 'name' => $si->customer->name,
@@ -241,29 +263,42 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 'afipDocTipo' => $si->customer->afipDocument->afip_code,
                 'address' => $this->address($si)
             ],
+
             'voucher' => [
-                'name' => $si->voucher->name,
-                'pto_vta' => ZeroLeft::print($si->pto_vta, 4),
+                'cae_fch_vto' => Carbon::parse($si->cae_fch_vto)->format('d-m-Y'),
+                'cae' => $si->cae,
                 'cbte_desde' => ZeroLeft::print($si->cbte_desde, 8),
                 'cbte_fch' => Carbon::parse($si->cbte_fch)->format('d-m-Y'),
-                'cae' => $si->cae,
-                'cae_fch_vto' => Carbon::parse($si->cae_fch_vto)->format('d-m-Y'),
-                'sale_conditions' => $si->saleCondition->name,
-                'sale_conditions_id' => $si->saleCondition->id,
-                'voucher_type' => $si->voucher->id,
-                'status' => $si->status_id,
-                'concepto' => $this->concepto($afip_data),
                 'cbteAsoc' => $this->comprAsociado($afip_data),
+                'children' => $this->children($si), //cuando una factura tiene nota de credito
+                'concepto' => $this->concepto($afip_data),
+                'fch_serv_desde' => $si->fch_serv_desde,
+                'fch_serv_hasta' => $si->fch_serv_hasta,
+                'fch_vto_pago' => $si->fch_vto_pago,
+                'isNotaCredito' => $this->isNotaCredito($afip_data),
+                'isNotaDebito' => $this->isNotaDebito($afip_data),
+                'name' => $si->voucher->name,
+                'parents' => $this->parents($si), //cuando una nota de credito pertenece a una factura
+                'payment_type_id' => ($si->paymentType()->exists()) ? $si->paymentType->id : null,
+                'payment_type' => ($si->paymentType()->exists()) ? $si->paymentType->name : null,
+                'periodoAsoc' => [
+                    'FchDesde' => Carbon::parse($si->fch_serv_desde)->format('Ymd'),
+                    'FchHasta' => Carbon::parse($si->fch_serv_hasta)->format('Ymd'),
+                ],
+                'pto_vta' => ZeroLeft::print($si->pto_vta, 4),
+                'sale_conditions_id' => $si->saleCondition->id,
+                'sale_conditions' => $si->saleCondition->name,
+                'status' => $si->status_id,
                 'total' => $this->totalInvoice($si),
                 'typeNotaCredito' => $this->typeNotaCredito($afip_data),
                 'typeNotaDebito' => $this->typeNotaDebito($afip_data),
-                'isNotaCredito' => $this->isNotaCredito($afip_data),
-                'isNotaDebito' => $this->isNotaDebito($afip_data),
-                'parents' => $this->parents($si)
+                'voucher_id' => $si->id,
+                'voucher_type' => $si->voucher->id,
+                'nota_credito_o_debito_text' => 'Sobre: ' .  $si->voucher->name . ' ' . ZeroLeft::print($si->pto_vta, 4) . ' - ' . ZeroLeft::print($si->cbte_desde, 8)
             ],
+
             'items' => $this->items($si),
             'comment' => ($si->comments()->exists()) ? $si->comments->comment : '',
-
         ];
     }
 }

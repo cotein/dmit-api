@@ -4,6 +4,19 @@ namespace App\Src\Traits;
 
 trait CompanyTrait
 {
+    public function vouchers($company): array
+    {
+        $vouchers = $company->afip_vouchers->transform(function ($voucher, int $key) {
+            return [
+                'id' => $voucher->id,
+                'value' => $voucher->id,
+                'afip_code' => $voucher->afip_code,
+                'name' => $voucher->name,
+            ];
+        });
+
+        return $vouchers->toArray();
+    }
 
     public function setMyCompanies($user): array
     {
@@ -31,7 +44,7 @@ trait CompanyTrait
                 'pto_vta_remito' => $company->pto_vta_remito,
                 'type_company' => $company->afip_type,
                 'user_id' => auth()->user()->id,
-                'vouchers' => $company->afip_vouchers()->select('id', 'name', 'afip_code')->get()->toArray(),
+                'vouchers' => $this->vouchers($company)
             ];
         })->toArray();
     }

@@ -36,6 +36,7 @@ class CreateSalesInvoicesTable extends Migration
             $table->date('fch_serv_desde')->nullable();
             $table->date('fch_serv_hasta')->nullable();
             $table->integer('parent_id')->unsigned()->nullable();
+            $table->date('fch_vto_pago')->nullable();
 
             $table->index(['cbte_desde', 'customer_id', 'company_id']);
         });

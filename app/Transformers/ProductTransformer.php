@@ -30,7 +30,7 @@ class ProductTransformer extends TransformerAbstract
         return $product->pricelist->map(function ($list) {
             return [
                 'id' => $list->id,
-                "name" => "LISTA DE PRECIO 2",
+                "name" => strtoupper($list->name),
                 'pricelist_id' => $list->pricelist_id,
                 'cost' => $list->pivot->price,
                 'profit_percentage' => $list->pivot->profit_percentage,
@@ -48,14 +48,19 @@ class ProductTransformer extends TransformerAbstract
     {
         return [
             'id' => $product->id,
-            'name' => $product->name,
+            'name' => strtoupper($product->name),
             'price_list' => $this->priceList($product),
             'iva' => [
                 'id' => $product->iva->id,
-                'name' => $product->iva->name,
-                'percentage' => $product->iva->percentage
+                'name' => strtoupper($product->iva->name),
+                'percentage' => $product->iva->percentage,
+                'afip_code' => (int) $product->iva->code
             ],
-            'actions' => []
+            'actions' => [],
+            'aditional' => [
+                'percentage' => 0,
+                'aditional' => 0,
+            ],
 
         ];
     }

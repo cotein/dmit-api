@@ -39,5 +39,7 @@ class DatabaseSeeder extends Seeder
         $this->call(AfipDocumentsTableSeeder::class);
         $this->call(CompanyBillingConceptsTableSeeder::class);
         $this->call(SaleConditionSeeder::class);
+        $this->call(PaymentTypeSeeder::class);
+        $this->call(AccountingAccountTableSeeder::class);
     }
 }
