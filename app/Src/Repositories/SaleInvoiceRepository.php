@@ -40,9 +40,9 @@ class SaleInvoiceRepository
         }
 
         if ($request->has('from') && $request->has('to')) {
-            $startDate = Carbon::createFromFormat('Y-m-d', $request->from);
-            $endDate = Carbon::createFromFormat('Y-m-d', $request->to);
-            $query->whereBetween('cbte_fch', [$startDate, $endDate]);
+            $from = Carbon::createFromFormat('Y-m-d', $request->from);
+            $to = Carbon::createFromFormat('Y-m-d', $request->to);
+            $query->whereBetween('cbte_fch', [$request->from, $request->to]);
         }
     }
 
@@ -60,7 +60,7 @@ class SaleInvoiceRepository
         $query->orderBy('cbte_fch', 'desc')->orderBy('cbte_desde', 'desc');
 
         // Paginar resultados (excepto para impresión)
-        if (!$request->has('print') || $request->get('print') !== 'yes') {
+        if ($request->has('print') && $request->get('print') === 'no') {
             return $query->paginate($request->per_page);
         }
 

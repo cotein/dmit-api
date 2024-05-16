@@ -23,6 +23,13 @@ class SaleInvoiceController extends Controller
     {
         $invoices = $this->saleInvoiceRepository->find($request);
 
+        if (!$request->has('print')) {
+
+            $invoices = fractal($invoices, new SaleInvoiceTransformer())->toArray()['data'];
+
+            return response()->json($invoices, 200);
+        }
+
         if ($request->has('print') && $request->get('print') === 'yes') {
 
             $invoices = fractal($invoices, new SaleInvoicePrintTransformer())->toArray()['data'];
