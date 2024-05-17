@@ -17,11 +17,7 @@ use Spatie\Activitylog\Facades\LogBatch;
 Route::get('/', function () {
     /* $p = new WSFEV1('testing', 20227339730, 1, 1);
     dd($p->FEParamGetTiposIva()); */
-
-    $c = SaleInvoices::select('company_id', 'voucher_id')
-        ->selectRaw('SUM(sale_invoice_items.total) as total_sum')
-        ->groupBy('company_id', 'voucher_id')
-        ->get();
-
+    $path = '/home/coto/Github/AfipCertificates/DIMA_TESTING.crt';
+    $c = file_get_contents($path);
     dd($c);
 });

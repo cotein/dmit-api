@@ -9,7 +9,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
-        "cotein/api-afip": "dev-main",
+        "cotein/api-afip": "^1.0",
         "guzzlehttp/guzzle": "^7.2",
         "jenssegers/date": "^4.0",
         "laravel/framework": "^10.8",
@@ -76,15 +76,6 @@
             "php-http/discovery": true
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../../../usr/packages/cotein/api-afip",
-            "options": {
-                "symlink": false
-            }
-        }
-    ],
     "minimum-stability": "stable",
     "prefer-stable": true
 }
