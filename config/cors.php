@@ -24,7 +24,7 @@ return [
 
     'allowed_methods' => ['POST', 'PUT', 'PATCH', 'GET', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['http://localhost:5173'],
+    'allowed_origins' => [env('CORS_ALLOW_ORIGIN')],
 
     'allowed_origins_patterns' => [],
 
