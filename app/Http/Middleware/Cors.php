@@ -16,7 +16,8 @@ class Cors
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
-        $response->header('Access-Control-Allow-Origin', 'http://localhost:5173');
+
+        $response->header('Access-Control-Allow-Origin', env('CORS_ALLOW_ORIGIN'));
 
         return $response;
     }

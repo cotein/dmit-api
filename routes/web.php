@@ -11,13 +11,16 @@ use Cotein\ApiAfip\Afip\WS\WSFEV1;
 use Cotein\ApiAfip\Models\AfipToken;
 use Illuminate\Support\Facades\Route;
 use App\Models\CustomerCuentaCorriente;
+use App\Models\User;
+use App\Src\Helpers\Afip;
+use Cotein\ApiAfip\AfipWebService as ApiAfipAfipWebService;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Facades\LogBatch;
+use Cotein\ApiAfip\AfipWebService;
 
 Route::get('/', function () {
     /* $p = new WSFEV1('testing', 20227339730, 1, 1);
     dd($p->FEParamGetTiposIva()); */
-    $path = '/home/coto/Github/AfipCertificates/DIMA_TESTING.crt';
-    $c = file_get_contents($path);
-    dd($c);
+    $b =  AfipWebService::findWebService('padron', 'testing', 2000872112, 1, 1);
+    dd($b);
 });
