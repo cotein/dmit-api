@@ -16,10 +16,10 @@ return [
     */
 
     'paths' => [
-        '*',
-        /* 'api/*',
+        'api/*',
         '/login',
-        '/logout', */
+        '/logout',
+        'oauth/*'
     ],
 
     'allowed_methods' => ['POST', 'PUT', 'PATCH', 'GET', 'DELETE', 'OPTIONS'],
