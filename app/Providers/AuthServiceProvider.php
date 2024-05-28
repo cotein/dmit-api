@@ -33,7 +33,8 @@ class AuthServiceProvider extends ServiceProvider
 
             $url = substr($url, 21);
 
-            $spaUrl = "http://localhost:5173/email/verify?email_verify_url=" . $url;
+            //$spaUrl = "http://localhost:5173/email/verify?email_verify_url=" . $url;
+            $spaUrl = env('CORS_ALLOW_ORIGIN') . "/email/verify?email_verify_url=" . $url;
 
             return (new MailMessage)
                 ->subject('Verificación de correo electŕonico.')

@@ -19,6 +19,5 @@ use Spatie\Activitylog\Facades\LogBatch;
 use Cotein\ApiAfip\AfipWebService;
 
 Route::get('/', function () {
-    /* $p = new WSFEV1('testing', 20227339730, 1, 1);
-    dd($p->FEParamGetTiposIva()); */
+    return 'funciona';
 });
