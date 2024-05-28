@@ -21,6 +21,4 @@ use Cotein\ApiAfip\AfipWebService;
 Route::get('/', function () {
     /* $p = new WSFEV1('testing', 20227339730, 1, 1);
     dd($p->FEParamGetTiposIva()); */
-    $b =  AfipWebService::findWebService('padron', 'testing', 2000872112, 1, 1);
-    dd($b);
 });
