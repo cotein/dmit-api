@@ -18,7 +18,7 @@ return [
 
     'allowed_origins' => [],
 
-    'allowed_origins_patterns' => ['/^https?:\/\/(.+\.)?dmit\.ar$/'],
+    'allowed_origins_patterns' => ['/^https?:\/\/(.+\.)?dmit\.ar$/', '/^http:\/\/localhost:5173$/', '/^https:\/\/www\.dmit\.ar$/'],
 
     'allowed_headers' => ['*'],
 
