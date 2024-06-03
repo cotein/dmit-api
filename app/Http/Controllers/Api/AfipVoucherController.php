@@ -47,22 +47,38 @@ class AfipVoucherController extends Controller
             'vouchers' => Constantes::INSCRIPCION_RESPONSABLE_MONOTRIBUTO
         ],
     ];
+
     /**
-     * Display a listing of the resource.
+     * Maneja la solicitud GET para obtener una lista de vouchers.
+     *
+     * Esta función maneja una solicitud GET a la ruta /api/vouchers. Si se proporcionan
+     * 'company_inscription_id' y 'customer_inscription_id' en la solicitud, se filtran los vouchers
+     * correspondientes. Si no se encuentra un voucher correspondiente, se devuelve un error 404.
+     *
+     * @param  \Illuminate\Http\Request  $request  La solicitud HTTP.
+     * @return \Illuminate\Http\Response Una respuesta JSON que contiene los vouchers solicitados.
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException Si no se encuentra un voucher correspondiente.
      */
     public function index(Request $request)
     {
+
         $vouchers = AfipVoucher::query();
 
         if ($request->has('company_inscription_id') && $request->has('customer_inscription_id')) {
+            $companyInscriptionId = (int) $request->company_inscription_id;
+            $customerInscriptionId = (int) $request->customer_inscription_id;
 
-            collect(self::GET_VOUCHERS)->map(function ($item) use ($request) {
-                if ((int) $request->company_inscription_id === $item['company'] && (int) $request->customer_inscription_id === $item['customer']) {
-                    $this->company_inscription_id = (int) $item['vouchers'];
-                }
+            $voucher = collect(self::GET_VOUCHERS)->firstWhere(function ($item) use ($companyInscriptionId, $customerInscriptionId) {
+                return $item['company'] === $companyInscriptionId && $item['customer'] === $customerInscriptionId;
             });
 
-            $vouchers = $vouchers->where('inscription_id', $this->company_inscription_id);
+            if ($voucher) {
+                $vouchers = $vouchers->where('inscription_id', $voucher['vouchers']);
+            } else {
+                Log::info('No matching voucher found');
+                return response()->json(['error' => 'No matching voucher found'], 404);
+            }
         }
 
         $vouchers = fractal($vouchers->get(), new AfipVoucherTransformer())->toArray()['data'];

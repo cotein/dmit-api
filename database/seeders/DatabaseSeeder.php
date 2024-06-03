@@ -41,5 +41,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SaleConditionSeeder::class);
         $this->call(PaymentTypeSeeder::class);
         $this->call(AccountingAccountTableSeeder::class);
+        $this->call(VouchersTableSeeder::class);
     }
 }

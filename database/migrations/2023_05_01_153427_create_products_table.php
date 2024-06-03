@@ -18,7 +18,7 @@ class CreateProductsTable extends Migration
             $table->increments('id');
             $table->string('meli_id', 191)->nullable();
             $table->integer('company_id')->unsigned()->default(1);
-            $table->string('name', 191)->nullable();
+            $table->text('name', 191)->nullable();
             $table->string('code', 191)->nullable();
             $table->string('sub_title', 191)->nullable();
             $table->text('description', 65535)->nullable();
@@ -39,8 +39,8 @@ class CreateProductsTable extends Migration
             $table->float('apply_discount_percentage', 14, 2)->default(0);
             $table->boolean('see_price_on_the_web')->nullable()->default(0);
 
-            $table->unique(['name', 'company_id']);
-            $table->index(['name', 'code', 'company_id']);
+            $table->unique(['code', 'company_id']);
+            $table->index(['code', 'company_id']);
         });
     }
 

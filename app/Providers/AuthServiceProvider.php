@@ -31,10 +31,18 @@ class AuthServiceProvider extends ServiceProvider
 
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
 
-            $url = substr($url, 21);
-
+            //$url = substr($url, 21);
             //$spaUrl = "http://localhost:5173/email/verify?email_verify_url=" . $url;
-            $spaUrl = env('CORS_ALLOW_ORIGIN') . "/email/verify?email_verify_url=" . $url;
+            //$spaUrl = env('CORS_ALLOW_ORIGIN') . "/email/verify?email_verify_url=" . $url;
+            $newDomain = env('CORS_ALLOW_ORIGIN');
+
+            // Extrae el dominio original de la URL
+            $originalDomain = parse_url($url, PHP_URL_SCHEME) . '://' . parse_url($url, PHP_URL_HOST);
+
+            // Reemplaza el dominio original con el nuevo dominio
+            $spaUrl = str_replace($originalDomain, $newDomain, $url);
+
+            $spaUrl = str_replace(':8001', '', $spaUrl);
 
             return (new MailMessage)
                 ->subject('Verificación de correo electŕonico.')
