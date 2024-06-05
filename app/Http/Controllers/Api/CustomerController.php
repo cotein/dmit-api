@@ -54,7 +54,7 @@ class CustomerController extends Controller
             $customer = fractal($customer, new CustomerTransformer())->toArray()['data'];
 
             return response()->json($customer, 201);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
 
             activity(Constantes::ERROR_AL_CREAR_CLIENTE)
                 ->causedBy(auth('api')->user())

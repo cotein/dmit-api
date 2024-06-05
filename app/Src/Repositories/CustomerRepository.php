@@ -2,6 +2,7 @@
 
 namespace App\Src\Repositories;
 
+use Exception;
 use App\Models\AfipDocument;
 use App\Models\Customer;
 use Illuminate\Database\Eloquent\Collection;
@@ -35,33 +36,36 @@ class CustomerRepository
     public function store(Request $request): Customer
     {
 
-        $afip_number = 0;
+        $afipData = $request->customer['afip_data'];
+        $afipNumber = (int) ($afipData['datosGenerales']['idPersona'] ?? $afipData['errorConstancia']['idPersona'] ?? 0);
+        $companyId = (int) $request->customer['company_id'];
 
-        if (array_key_exists('datosGenerales', $request->customer['afip_data'])) {
-            $afip_number = (int) $request->customer['afip_data']['datosGenerales']['idPersona'];
+        $customer = Customer::firstOrNew([
+            'afip_number' => $afipNumber,
+            'company_id' => $companyId,
+        ]);
+
+        if ($customer->exists) {
+            throw new Exception('Ya se encuentra registrado un cliente con la misma CUIT.');
         }
 
-        if (array_key_exists('errorConstancia', $request->customer['afip_data'])) {
-            $afip_number = (int) $request->customer['afip_data']['errorConstancia']['idPersona'];
-        }
+        $customer->fill([
+            'name' => strtoupper($request->customer['name']),
+            'last_name' => strtoupper($request->customer['lastName']),
+            'fantasy_name' => strtoupper($request->customer['fantasy_name']),
+            'afip_type' => $request->customer['type_customer'], //fisica ó juridica
+            'afip_inscription_id' => $request->customer['inscription'],
+            'afip_data' => (int) $request->customer['afip_data'],
+            'afip_document_id' => AfipDocument::where('afip_code', $request->customer['cuit_id'])->firstOrFail()->id,
+            'user_id' => auth('api')->user()->id,
+        ]);
 
-        $customer = new Customer();
-        $customer->name = strtoupper($request->customer['name']);
-        $customer->last_name = strtoupper($request->customer['lastName']);
-        $customer->fantasy_name = strtoupper($request->customer['fantasy_name']);
-        $customer->afip_number = $afip_number;
-        $customer->afip_type = $request->customer['type_customer']; //fisica ó juridica
-        $customer->afip_inscription_id = $request->customer['inscription'];
-        $customer->afip_data = (int) $request->customer['afip_data'];
-        $customer->afip_document_id = AfipDocument::where('afip_code', $request->customer['cuit_id'])->get()->first()->id;
-        $customer->company_id = (int) $request->customer['company_id'];
-        $customer->user_id = auth('api')->user()->id;
         $customer->save();
         $customer->refresh();
 
         $address = $request->customer['address'];
 
-        if ($address['city'] != '' && $address['street'] != '' && $address['state_id'] != '') {
+        if (!empty($address['city']) && !empty($address['street']) && !empty($address['state_id'])) {
             $customer->address()->create($address);
         }
 

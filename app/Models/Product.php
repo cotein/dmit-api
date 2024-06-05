@@ -15,6 +15,25 @@ class Product extends Model implements HasMedia, Auditable
 {
     use HasFactory, InteractsWithMedia, \OwenIt\Auditing\Auditable;
 
+    protected $fillable = [
+        'company_id',
+        'name',
+        'code',
+        'sub_title',
+        'description',
+        'iva_id',
+        'money_id',
+        'priority_id',
+        'published_meli',
+        'published_here',
+        'slug',
+        'critical_stock',
+        'apply_discount',
+        'apply_discount_amount',
+        'apply_discount_percentage',
+        'see_price_on_the_web',
+    ];
+
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class);

@@ -11,6 +11,25 @@ class Customer extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'name',
+        'last_name',
+        'fantasy_name',
+        'afip_type',
+        'afip_inscription_id',
+        'afip_data',
+        'afip_document_id',
+        'user_id',
+        'company_id',
+        'active',
+        'afip_number',
+    ];
+
     public function address()
     {
         return $this->morphOne(Address::class, 'addressable');
