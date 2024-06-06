@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Src\Repositories\CompanyRepository;
 use App\Src\Traits\CompanyTrait;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class CompanyController extends Controller
 {
@@ -63,11 +64,24 @@ class CompanyController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request)
+    public function update(Request $request, string $id)
     {
-        $company = $this->companyRepository->update($request);
+        try {
 
-        return response()->json($company, 200);
+            $company = $this->companyRepository->update($request, $id);
+
+            $companies = $this->setMyCompanies(auth()->user());
+
+            return response()->json($companies, 200);
+        } catch (\Exception $e) {
+
+            activity(Constantes::ERROR_AL_CREAR_COMPAÑIA)
+                ->causedBy(auth('api')->user())
+                ->withProperties($request->all())
+                ->log($e->getMessage());
+
+            throw new Exception($e->getMessage(), $e->getCode());
+        }
     }
 
     /**

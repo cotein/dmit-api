@@ -18,7 +18,13 @@ class WSFacturaElectronica
     public function __construct()
     {
 
-        $this->wsfe = Afip::findWebService('factura', request()->environment, request()->company_cuit,  request()->company_id,  request()->user_id);
+        $environment = request()->environment;
+
+        if ($environment === null) {
+            $environment = 'testing';
+        }
+
+        $this->wsfe = Afip::findWebService('factura', $environment, request()->company_cuit,  request()->company_id,  request()->user_id);
     }
     public function FECompUltimoAutorizado(Request $request)
     {

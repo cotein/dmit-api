@@ -7,18 +7,19 @@ use Spatie\Activitylog\Models\Activity;
 class ActivityLog
 {
     /**
-     * Method save
+     * Guarda una nueva actividad en la base de datos.
      *
-     * @param $data $data [explicite description]
-     * $data['log_name'];
-     * $data['description'];
-     * $data['subject_type'];
-     * $data['subject_id'];
-     * $data['causer_type'];
-     * $data['causer_id'];
-     * $data['company_id'];
-     * $data['properties'];
-     * $data['batch_uuid'];
+     * @param array $data Los datos de la actividad. Debe contener las siguientes claves:
+     *                    'log_name' => (string) El nombre del log.
+     *                    'description' => (string) La descripción de la actividad.
+     *                    'subject_type' => (string) El tipo del sujeto de la actividad.
+     *                    'subject_id' => (int) El ID del sujeto de la actividad.
+     *                    'causer_type' => (string) El tipo del causante de la actividad.
+     *                    'causer_id' => (int) El ID del causante de la actividad.
+     *                    'company_id' => (int) El ID de la compañía asociada a la actividad.
+     *                    'properties' => (array) Las propiedades adicionales de la actividad.
+     *                    'batch_uuid' => (string) El UUID del lote al que pertenece la actividad.
+     *
      * @return void
      */
     public static function save($data): void
