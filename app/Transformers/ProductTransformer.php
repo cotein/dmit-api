@@ -3,6 +3,7 @@
 namespace App\Transformers;
 
 use App\Models\Product;
+use Illuminate\Support\Facades\Log;
 use League\Fractal\TransformerAbstract;
 
 class ProductTransformer extends TransformerAbstract
@@ -35,9 +36,16 @@ class ProductTransformer extends TransformerAbstract
                 'cost' => $list->pivot->price,
                 'profit_percentage' => $list->pivot->profit_percentage,
                 'profit_rate' => $list->pivot->profit_rate,
-                'sale_price' => $list->pivot->price + ($list->pivot->price * $list->pivot->profit_percentage / 100)
+                'sale_price' => $this->calculateSalePrice($list->pivot->price, $list->pivot->profit_percentage)
             ];
         })->toArray();
+    }
+
+    private function calculateSalePrice($price, $profitPercentage): float
+    {
+        //Log::info('Price: ' . $price . ' ' . 'Profit: ' . $profitPercentage . ' ' . 'Sale Price: ' . $price + ($price * $profitPercentage / 100));
+        //return $price + ($price * $profitPercentage / 100);
+        return $price;
     }
     /**
      * A Fractal transformer.
