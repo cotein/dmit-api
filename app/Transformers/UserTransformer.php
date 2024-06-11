@@ -48,6 +48,7 @@ class UserTransformer extends TransformerAbstract
             'name' => strtoupper($user->name),
             'email' => $user->email,
             'isActive' => $user->isActive(),
+            'user_level' => $user->userType->level,
             'companies' => $user->listMyCompanies(),
             'avatar' => ($user->getMedia('avatar')->first()) ? $user->getMedia('avatar')->first()->getFullUrl() : '/src/assets/img/avatar/chat-auth.png'
         ];

@@ -12,11 +12,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    //'allowed_origins' => [env('CORS_ALLOW_ORIGIN')],
-
-    //'allowed_origins_patterns' => [],
-
-    'allowed_origins' => [],
+    'allowed_origins' => [env('CORS_ALLOW_ORIGIN')],
 
     'allowed_origins_patterns' => ['/^https?:\/\/(.+\.)?dmit\.ar$/', '/^http:\/\/localhost:5173$/', '/^https:\/\/www\.dmit\.ar$/'],
 

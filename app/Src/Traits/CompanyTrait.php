@@ -30,7 +30,7 @@ trait CompanyTrait
                 'cuit' => $company->afip_number,
                 'document' => $company->afipDocument->name,
                 'afip_environment' => $company->environment,
-                'fantasy_name' => ($company->fantasy_name) ? strtoupper($company->fantasy_name) : false,
+                'fantasy_name' => ($company->fantasy_name) ? strtoupper($company->fantasy_name) : '',
                 'id' => $company->id,
                 'iibb' => $company->iibb_conv,
                 'inscription_id' => $company->afipInscription->id,

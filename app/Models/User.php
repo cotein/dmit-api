@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Image\Manipulations;
 
 class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMedia
@@ -56,6 +57,13 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMed
 
         return $this->belongsToMany(Company::class);
     }
+
+    public function userType(): HasOne
+    {
+
+        return $this->hasOne(UserType::class, 'id', 'type_user_id');
+    }
+
 
     public function isActive(): bool
     {
