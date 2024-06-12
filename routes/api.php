@@ -24,7 +24,7 @@ use App\Http\Controllers\Api\AfipFacturaElectronicaController;
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('register/check-cuit', [RegisterController::class, 'checkCuit']);
 Route::post('login', [AuthController::class, 'login']);
-Route::get('email/verify/{id}', [EmailVerificationController::class, 'verify'])->name('verification.verify')->middleware('signed');; // Make sure to keep this as your route name
+Route::get('email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify'); // Make sure to keep this as your route name
 Route::post('email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
 
 Route::middleware(['auth:api'])->group(function () {

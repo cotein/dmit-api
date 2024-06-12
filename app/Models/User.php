@@ -2,20 +2,26 @@
 
 namespace App\Models;
 
+use App\Src\VerificationEmail;
+use Spatie\Image\Manipulations;
 use App\Src\Traits\CompanyTrait;
 use Spatie\MediaLibrary\HasMedia;
 use Laravel\Passport\HasApiTokens;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Mail;
 use Spatie\Permission\Traits\HasRoles;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Notifications\Notifiable;
 use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Spatie\Image\Manipulations;
 
 class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMedia
 {

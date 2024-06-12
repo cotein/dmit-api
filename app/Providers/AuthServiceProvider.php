@@ -4,10 +4,12 @@ namespace App\Providers;
 
 // use Illuminate\Support\Facades\Gate;
 use Laravel\Passport\Passport;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Log;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -25,31 +27,58 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->registerPolicies();
+
         Passport::tokensExpireIn(now()->addDays(1));
         Passport::refreshTokensExpireIn(now()->addDays(30));
         Passport::personalAccessTokensExpireIn(now()->addMonths(6));
 
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
+            /* $query = parse_url($url, PHP_URL_QUERY);
+            parse_str($query, $params);
+            $signature = 'signature=' . $params['signature'];
+            log::info('Token: ' . $query);
+            // Obtén el ID del usuario
+            $userId = $notifiable->getKey();
+            $email = $notifiable->getEmailForVerification();
+            Log::info('Email: ' . $email);
+            // Genera el hash
+            $hash = sha1($email);
+            Log::info('Hash: ' . $hash);
+            // Construye la nueva URL
+            $spaUrl = env('CORS_ALLOW_ORIGIN') . '/email/verify/' . $userId . '/' . $hash . '?' . $signature;
+ */
+            // Generar la URL firmada
+            $query = parse_url($url, PHP_URL_QUERY);
+            parse_str($query, $params);
+            $signature = 'signature=' . $params['signature'];
 
-            //$url = substr($url, 21);
-            //$spaUrl = "http://localhost:5173/email/verify?email_verify_url=" . $url;
-            //$spaUrl = env('CORS_ALLOW_ORIGIN') . "/email/verify?email_verify_url=" . $url;
-            $newDomain = env('CORS_ALLOW_ORIGIN');
+            $email = $notifiable->getEmailForVerification();
+            // Genera el hash
+            $hash = sha1($email);
 
-            // Extrae el dominio original de la URL
-            $originalDomain = parse_url($url, PHP_URL_SCHEME) . '://' . parse_url($url, PHP_URL_HOST);
+            URL::forceRootUrl(env('CORS_ALLOW_ORIGIN'));
 
-            // Reemplaza el dominio original con el nuevo dominio
-            $spaUrl = str_replace($originalDomain, $newDomain, $url);
+            // Generar la URL firmada
+            $url = URL::signedRoute(
+                'verification.verify',
+                [
+                    'id' => $notifiable->getKey(),
+                    'hash' => sha1($notifiable->getEmailForVerification()),
+                ],
+                now()->addMinutes(120)
+            );
 
-            $spaUrl = str_replace(':8001', '', $spaUrl);
+            // Create the verification URL with the JWT token
+            $url = env('CORS_ALLOW_ORIGIN') . '/email/verify/' . $notifiable->getKey() . '/' . $hash . '?' . $signature;
+
 
             return (new MailMessage)
                 ->subject('Verificación de correo electŕonico.')
                 ->salutation('Saludos, DMIT')
                 ->greeting('Bienvenido a nuestro Sistema de Facturación Online')
                 ->line('Presione el botón de abajo para verificar su correo electrónico, así su cuenta quedará activa.')
-                ->action('Verificación de correo electŕonico.', $spaUrl);
+                ->action('Verificación de correo electŕonico.', $url);
         });
     }
 }

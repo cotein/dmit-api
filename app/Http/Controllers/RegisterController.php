@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\RegisterUserFormRequest;
 use App\Src\Constantes;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Cotein\ApiAfip\Facades\AfipWebService;
+use App\Http\Requests\RegisterUserFormRequest;
 
 class RegisterController extends Controller
 {
@@ -14,6 +15,8 @@ class RegisterController extends Controller
     public function register(RegisterUserFormRequest $request): \Illuminate\Http\JsonResponse
     {
         try {
+            DB::beginTransaction();
+
             $user = new User;
 
             $user->name = strtoupper($request->user['name']);
@@ -30,12 +33,27 @@ class RegisterController extends Controller
 
             $user->sendEmailVerificationNotification();
 
+            activity()
+                ->causedBy($user)
+                ->performedOn($user)
+                ->log('Usuario creado');
+
+            DB::commit();
+
             return response()->json([
                 'name' => $request->name,
                 'message' => 'Usuario creado satisfactoriamente',
 
             ], 201);
         } catch (\Exception $e) {
+            DB::rollBack();
+
+            activity()
+                ->causedBy($user)
+                ->performedOn($user)
+                ->withProperties(['exception' => $e])
+                ->log('Error al crear usuario');
+
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage()

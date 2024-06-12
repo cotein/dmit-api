@@ -15,30 +15,38 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 class EmailVerificationController extends Controller
 {
 
-    public function verify(Request $request, $id)
+    public function verify(Request $request, $id, $hash)
     {
         $user = User::find($id);
 
-        $user->active = 1;
-
-        $user->save();
+        if (!$user) {
+            return response()->json('Usuario no encontrado', 404);
+        }
 
         if ($user->email_verified_at) {
             return response()->json('Cuenta ya verificada, inicie sesión en el Sistema', 200);
         }
 
-        if (!$request->hasValidSignature()) {
-            return response()->json('Debe reenviar la petición de verificación de cuenta', 200);
+        /* if (!$request->hasValidSignature()) {
+            return response()->json('Firma inválida en la petición', 400);
+        } */
+
+        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            return response()->json('Hash de verificación no coincide', 400);
         }
 
-        if (!hash_equals((string) $request->all()['hash'], sha1($user->getEmailForVerification()))) {
-            return response()->json('Debe reenviar la petición de verificación de cuenta', 200);
+        try {
+            $user->active = 1;
+            if ($user->markEmailAsVerified()) {
+                event(new Verified($user));
+            }
+            $user->save();
+        } catch (\Exception $e) {
+            Log::error('Error al verificar el correo electrónico: ' . $e->getMessage());
+            return response()->json('Error al verificar el correo electrónico', 500);
         }
 
-        if ($user->markEmailAsVerified()) {
-            event(new Verified($user));
-        }
-
+        Log::info('Email verificado');
         return response()->json('Email verificado, ya puede iniciar sesión en el Sistema', 200);
     }
 
