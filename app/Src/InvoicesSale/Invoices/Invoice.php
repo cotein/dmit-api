@@ -1,6 +1,6 @@
 <?php
 
-namespace Cotein\ApiAfip\Afip\FacturacionElectronica\Invoices;
+namespace App\Src\InvoicesSale\Invoices;
 
 use App\Src\Afip\WS\AfipWSFE;
 use App\Src\Afip\FacturacionElectronica\Traits\WSAATrait;
