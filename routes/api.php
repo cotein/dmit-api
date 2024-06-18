@@ -43,6 +43,7 @@ Route::middleware(['auth:api'])->group(function () {
 
         Route::post('/uploadAvatar', [UserController::class, 'uploadAvatar']);
         Route::post('product/img', [ProductController::class, 'img']);
+        Route::post('company/logo', [CompanyController::class, 'logo']);
 
         Route::apiResources([
             'category' => CategoryController::class,

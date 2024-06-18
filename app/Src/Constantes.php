@@ -57,4 +57,9 @@ class Constantes
     const USER_ROOT = 1;
     const USER_ADMIN = 2;
     const USER_USER = 3;
+
+    const PRODUCTION_ENVIRONMENT = 'PRODUCTION';
+    const TESTING_ENVIRONMENT = 'TESTING';
+
+    const DIEGO_BARRUETA_CUIT = 20227339730;
 }

@@ -78,6 +78,9 @@ class CompanyRepository
         }
     }
 
+    public function saveLogo(Request $request)
+    {
+    }
     public function find(Request $request)
     {
     }

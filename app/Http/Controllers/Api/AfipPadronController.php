@@ -6,43 +6,61 @@ use App\Models\User;
 use Cotein\ApiAfip\Facades\Afip;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use App\Src\Constantes;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class AfipPadronController extends Controller
 {
     protected $padron;
 
-    public function getCompanyDataByPadron()
+    public function getCompanyDataByPadron(Request $request)
     {
+        $request->validate([
+            'cuit' => 'required|numeric',
+        ]);
+
         try {
-            $ws = 'constancia';
+            $ws = $this->selectWebService($request->cuit);
 
-            if (strlen((string) request()->cuit) < 11) {
-                $ws = 'padron';
+            $user = auth()->user();
+
+            if (!$user) {
+                throw new \Exception('El usuario no está autenticado');
             }
 
-            $user = (auth()->user()) ? auth()->user() : User::find(1);
+            $this->padron = $this->getPadron($ws, $user);
 
-            if (!$user->company) {
-
-                $this->padron = Afip::findWebService($ws, 'PRODUCTION', 20227339730, 1, 1);
-            } else {
-
-                $this->padron = Afip::findWebService($ws, 'PRODUCTION', $user->company->afip_number, $user->company->id, $user->id);
-            }
-
-            if ($ws === 'constancia') {
-                return $this->padron->getPersona(request()->cuit);
-            }
-
-            if ($ws === 'padron') {
-                return $this->padron->getPersonaByDocumento(request()->cuit);
-            }
+            return $this->getPersonaData($ws, $request->cuit);
         } catch (\Exception $e) {
             $date = new Carbon();
             Log::alert('Fecha ' . $date->now() . ' code' . $e->getCode() . ' message ' . $e->getMessage());
 
             throw $e;
+        }
+    }
+
+    protected function selectWebService($cuit)
+    {
+        return strlen((string) $cuit) < 11 ? 'padron' : 'constancia';
+    }
+
+    protected function getPadron($ws, User $user)
+    {
+        if (!$user->company) {
+            return Afip::findWebService($ws, Constantes::PRODUCTION_ENVIRONMENT, Constantes::DIEGO_BARRUETA_CUIT, 1, 1);
+        }
+        return Afip::findWebService($ws, Constantes::PRODUCTION_ENVIRONMENT, $user->company->afip_number, $user->company->id, $user->id);
+    }
+
+    protected function getPersonaData($ws, $cuit)
+    {
+        if ($ws === 'constancia') {
+            return $this->padron->getPersona($cuit);
+        }
+
+        if ($ws === 'padron') {
+            return $this->padron->getPersonaByDocumento($cuit);
         }
     }
 }

@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use Exception;
+use App\Models\Company;
 use App\Src\Constantes;
 use Illuminate\Http\Request;
+use App\Src\Traits\CompanyTrait;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Src\Repositories\CompanyRepository;
-use App\Src\Traits\CompanyTrait;
-use Exception;
-use Illuminate\Support\Facades\Log;
 
 class CompanyController extends Controller
 {
@@ -90,5 +91,21 @@ class CompanyController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function logo(Request $request)
+    {
+        Log::alert('logo');
+        Log::alert($request->company);
+        Log::alert('logo');
+        $c = json_decode($request->input('company'), true);
+        $company = Company::find($c['id']);
+
+        if ($request->hasFile('logo')) {
+            // Agrega el archivo al modelo
+            $company->addMediaFromRequest('logo')->toMediaCollection('logos');
+        }
+
+        return response()->json(['message' => 'Logo uploaded successfully'], 200);
     }
 }
