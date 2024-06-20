@@ -96,8 +96,8 @@ class CompanyController extends Controller
     public function logo(Request $request)
     {
         Log::alert('logo');
-        Log::alert($request->company);
-        Log::alert('logo');
+        $data = json_decode($request->input('company'), false);
+        Log::alert($data);
         $c = json_decode($request->input('company'), true);
         $company = Company::find($c['id']);
 

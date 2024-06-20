@@ -19,6 +19,5 @@ use Spatie\Activitylog\Facades\LogBatch;
 use Cotein\ApiAfip\AfipWebService;
 
 Route::get('/', function () {
-    //dd($user->userType);
     return 'funciona';
 });
