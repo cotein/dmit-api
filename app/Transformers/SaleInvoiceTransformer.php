@@ -248,7 +248,8 @@ class SaleInvoiceTransformer extends TransformerAbstract
                     'street' => $si->company->address->street,
                     'cp' => $si->company->address->cp,
                     'state' => AfipState::where('afip_code', $si->company->address->state_id)->get()->first()->name
-                ]
+                ],
+                'urlLogo' => $si->company->getMedia('logos')->first()->getFullUrl(),
             ],
 
             'customer' => [

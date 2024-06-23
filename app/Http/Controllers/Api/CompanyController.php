@@ -10,6 +10,7 @@ use App\Src\Traits\CompanyTrait;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Src\Repositories\CompanyRepository;
+use Illuminate\Support\Facades\Storage;
 
 class CompanyController extends Controller
 {
@@ -41,6 +42,8 @@ class CompanyController extends Controller
             $company->users()->sync(auth('api')->user()->id);
 
             $companies = $this->setMyCompanies(auth()->user());
+
+            Storage::disk('public')->makeDirectory('companies/' . $company->afip_number);
 
             return response()->json($companies, 201);
         } catch (\Exception $e) {
@@ -95,17 +98,27 @@ class CompanyController extends Controller
 
     public function logo(Request $request)
     {
-        Log::alert('logo');
-        $data = json_decode($request->input('company'), false);
-        Log::alert($data);
-        $c = json_decode($request->input('company'), true);
-        $company = Company::find($c['id']);
+        $company = Company::find($request->company);
 
-        if ($request->hasFile('logo')) {
-            // Agrega el archivo al modelo
-            $company->addMediaFromRequest('logo')->toMediaCollection('logos');
+        if (!$company->getMedia('logos')->isEmpty()) {
+            $company->clearMediaCollection('logos');
         }
 
-        return response()->json(['message' => 'Logo uploaded successfully'], 200);
+        if ($request->hasFile('file_0')) {
+            $fileName = 'logo'; // El nombre del archivo será algo como "logo.png"
+            // Elimina el logo existente si hay alguno
+            $company->clearMediaCollection('logos');
+
+            // Agrega el nuevo archivo al modelo, especificando el directorio y el nombre del archivo
+            $company->addMediaFromRequest('file_0')
+                ->usingFileName($fileName . '.' . $request->file_0->getClientOriginalExtension()) // Asegura que la extensión del archivo se mantenga
+                ->toMediaCollection('logos');
+
+            $company->refresh();
+        }
+
+        $companies = $this->setMyCompanies(auth()->user());
+
+        return response()->json($companies, 201);
     }
 }

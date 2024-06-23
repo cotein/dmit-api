@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Company;
+
 return [
 
     /*
@@ -39,7 +41,7 @@ return [
     /*
      * When enabled, media collections will be serialised using the default
      * laravel model serialization behaviour.
-     * 
+     *
      * Keep this option disabled if using Media Library Pro components (https://medialibrary.pro)
      */
     'use_default_collection_serialization' => false,
@@ -77,6 +79,7 @@ return [
      * Here you can specify which path generator should be used for the given class.
      */
     'custom_path_generators' => [
+        Company::class => App\Src\MediaLibrary\LogoCustomPathGenerator::class,
         // Model::class => PathGenerator::class
         // or
         // 'model_morph_alias' => PathGenerator::class

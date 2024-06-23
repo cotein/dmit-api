@@ -22,6 +22,22 @@ trait CompanyTrait
     {
 
         return $user->companies->transform(function ($company) {
+
+            $logo = $company->getMedia('logos')->first();
+            $logoUrl = $logo ? $logo->getFullUrl() : null;
+
+            if ($logo) {
+                // Obtén el contenido binario de la imagen
+                $imagePath = $logo->getPath();
+                $imageContent = file_get_contents($imagePath);
+                // Convierte el contenido binario a Base64
+                $base64Image = base64_encode($imageContent);
+                // Prepara la cadena para usar como fuente de imagen en HTML, si es necesario
+                $logo_base64 = 'data:image/' . $logo->extension . ';base64,' . $base64Image;
+            } else {
+                $logo_base64 = null;
+            }
+
             return [
                 'activity_init' => $company->activity_init,
                 'address' => $company->address,
@@ -44,7 +60,9 @@ trait CompanyTrait
                 'pto_vta_remito' => $company->pto_vta_remito,
                 'type_company' => $company->afip_type,
                 'user_id' => auth()->user()->id,
-                'vouchers' => $this->vouchers($company)
+                'vouchers' => $this->vouchers($company),
+                'urlLogo' => $logoUrl . '?t=' . time(),
+                'logo_base64' => $logo_base64,
             ];
         })->toArray();
     }

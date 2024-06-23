@@ -10,6 +10,7 @@ return [
         'oauth/*',
         'email/verify/*',
         'email/resend',
+        'storage/companies/*',
     ],
 
     'allowed_methods' => ['*'],
