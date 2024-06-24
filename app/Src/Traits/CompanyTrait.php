@@ -24,7 +24,6 @@ trait CompanyTrait
         return $user->companies->transform(function ($company) {
 
             $logo = $company->getMedia('logos')->first();
-            $logoUrl = $logo ? $logo->getFullUrl() : null;
 
             if ($logo) {
                 // Obtén el contenido binario de la imagen
@@ -41,17 +40,18 @@ trait CompanyTrait
             return [
                 'activity_init' => $company->activity_init,
                 'address' => $company->address,
+                'afip_environment' => $company->environment,
                 'billing_concept' => $company->billing_concept,
                 'created_at' => $company->created_at,
                 'cuit' => $company->afip_number,
                 'document' => $company->afipDocument->name,
-                'afip_environment' => $company->environment,
                 'fantasy_name' => ($company->fantasy_name) ? strtoupper($company->fantasy_name) : '',
                 'id' => $company->id,
                 'iibb' => $company->iibb_conv,
                 'inscription_id' => $company->afipInscription->id,
                 'inscription' => strtoupper($company->afipInscription->name),
                 'lastName' => strtoupper($company->last_name),
+                'logo_base64' => $logo_base64,
                 'name' => strtoupper($company->name),
                 'perception_iibb' => $company->percep_iibb,
                 'perception_iva' => $company->percep_iva,
@@ -61,8 +61,6 @@ trait CompanyTrait
                 'type_company' => $company->afip_type,
                 'user_id' => auth()->user()->id,
                 'vouchers' => $this->vouchers($company),
-                'urlLogo' => $logoUrl . '?t=' . time(),
-                'logo_base64' => $logo_base64,
             ];
         })->toArray();
     }
