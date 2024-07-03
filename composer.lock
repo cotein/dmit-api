@@ -137,16 +137,16 @@
         },
         {
             "name": "cotein/api-afip",
-            "version": "1.0.19",
+            "version": "1.0.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/cotein/api-afip.git",
-                "reference": "ca0935b072e373515a93d55906208e36ba552c8e"
+                "reference": "be793034a3d00ba45966f81ee6d8ac2767e3d4bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cotein/api-afip/zipball/ca0935b072e373515a93d55906208e36ba552c8e",
-                "reference": "ca0935b072e373515a93d55906208e36ba552c8e",
+                "url": "https://api.github.com/repos/cotein/api-afip/zipball/be793034a3d00ba45966f81ee6d8ac2767e3d4bb",
+                "reference": "be793034a3d00ba45966f81ee6d8ac2767e3d4bb",
                 "shasum": ""
             },
             "require": {
@@ -181,9 +181,9 @@
             "description": "Consumir los web services de Afip",
             "support": {
                 "issues": "https://github.com/cotein/api-afip/issues",
-                "source": "https://github.com/cotein/api-afip/tree/1.0.19"
+                "source": "https://github.com/cotein/api-afip/tree/1.0.20"
             },
-            "time": "2024-07-03T12:31:45+00:00"
+            "time": "2024-07-03T14:09:01+00:00"
         },
         {
             "name": "defuse/php-encryption",
