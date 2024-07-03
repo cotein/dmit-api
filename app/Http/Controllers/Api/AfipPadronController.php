@@ -34,7 +34,6 @@ class AfipPadronController extends Controller
             return $this->getPersonaData($ws, $request->cuit);
         } catch (\Exception $e) {
             $date = new Carbon();
-            Log::alert('Fecha ' . $date->now() . ' code' . $e->getCode() . ' message ' . $e->getMessage());
 
             throw $e;
         }
