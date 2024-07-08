@@ -52,6 +52,7 @@ class Constantes
     const INSCRIPCION_RESPONSABLE_INSCRIPTO = 1;
     const INSCRIPCION_CONSUMIDOR_FINAL = 5;
     const INSCRIPCION_RESPONSABLE_MONOTRIBUTO = 6;
+    const INSCRIPCION_IVA_EXENTO = 4;
 
     //usuarios
     const USER_ROOT = 1;

@@ -46,6 +46,11 @@ class AfipVoucherController extends Controller
             'customer' => Constantes::INSCRIPCION_RESPONSABLE_MONOTRIBUTO,
             'vouchers' => Constantes::INSCRIPCION_RESPONSABLE_MONOTRIBUTO
         ],
+        [
+            'company' => Constantes::INSCRIPCION_RESPONSABLE_MONOTRIBUTO,
+            'customer' => Constantes::INSCRIPCION_IVA_EXENTO,
+            'vouchers' => Constantes::INSCRIPCION_RESPONSABLE_MONOTRIBUTO
+        ],
     ];
 
     /**
