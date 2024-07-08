@@ -83,66 +83,66 @@ class SaleInvoiceRepository
 
     public function store($data): SaleInvoices
     {
-        //try {
-        $voucher = $data['FeCabReq']['CbteTipo'];
+        try {
+            $voucher = $data['FeCabReq']['CbteTipo'];
 
-        if ($voucher < 10) {
-            $voucher = '00' . $voucher;
-        } elseif ($voucher < 100) {
-            $voucher = '0' . $voucher;
-        } else {
-            $voucher = (string) $voucher;
-        }
-        Log::alert($voucher);
-        $voucher_id = AfipVoucher::where('afip_code', $voucher)->get()->first()->id;
-        Log::alert($voucher);
-        $result = json_decode(json_encode($data['result']), true);
+            if ($voucher < 10) {
+                $voucher = '00' . $voucher;
+            } elseif ($voucher < 100) {
+                $voucher = '0' . $voucher;
+            } else {
+                $voucher = (string) $voucher;
+            }
 
-        // Crear la nueva factura
-        $invoice = new SaleInvoices();
-        $invoice->company_id = $data['company_id'];
-        $invoice->customer_id = array_key_exists('value', $data['customer']) ? $data['customer']['value'] : $data['customer']['id'];
-        $invoice->voucher_id = $voucher_id;
-        $invoice->pto_vta = $data['FeCabReq']['PtoVta'];
-        $invoice->cbte_desde = $data['FECAEDetRequest']['CbteDesde'];
-        $invoice->cbte_hasta = $data['FECAEDetRequest']['CbteDesde'];
-        $invoice->cbte_fch = Carbon::parse($data['FECAEDetRequest']['CbteFch']);
-        $invoice->cae = $result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CAE'];
-        $invoice->cae_fch_vto = Carbon::parse($result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CAEFchVto']);
-        $invoice->user_id = $data['user_id'];
-        $invoice->afip_data = collect($result)->toJson();
-        $invoice->vto_payment = null;
-        $invoice->commercial_reference = null;
-        $invoice->payment_type_id = $data['paymentType'];
-        $invoice->sales_condition_id = $data['saleCondition'];
-        $invoice->status_id = $this->status($data);
-        $invoice->parent_id = array_key_exists('parent', $data) ? $data['parent'] : null;
-        $invoice->fch_serv_desde = (!empty($data['FECAEDetRequest']['FchServDesde'])) ? Carbon::parse($data['FECAEDetRequest']['FchServDesde']) : null;
-        $invoice->fch_serv_hasta = (!empty($data['FECAEDetRequest']['FchServHasta'])) ? Carbon::parse($data['FECAEDetRequest']['FchServHasta']) : null;
-        $invoice->fch_vto_pago = (!empty($data['FECAEDetRequest']['FchVtoPago'])) ? Carbon::parse($data['FECAEDetRequest']['FchVtoPago']) : null;
-        $invoice->save();
+            $voucher_id = AfipVoucher::where('afip_code', $voucher)->get()->first()->id;
 
-        if (array_key_exists('parent', $data) && !isNull($data['parent'])) {
-            $si = SaleInvoices::find((int) $data['parent']);
-            $si->parent_id = $invoice->id;
-            $si->save();
-        }
-        // Crear items de la factura
-        $this->createInvoiceItems($invoice, $data['products']);
+            $result = json_decode(json_encode($data['result']), true);
 
-        // Guardar comentario de la factura (si existe)
-        if (isset($data['comments'])) {
-            $this->createInvoiceComment($invoice, $data['comments']);
-        }
+            // Crear la nueva factura
+            $invoice = new SaleInvoices();
+            $invoice->company_id = $data['company_id'];
+            $invoice->customer_id = array_key_exists('value', $data['customer']) ? $data['customer']['value'] : $data['customer']['id'];
+            $invoice->voucher_id = $voucher_id;
+            $invoice->pto_vta = $data['FeCabReq']['PtoVta'];
+            $invoice->cbte_desde = $data['FECAEDetRequest']['CbteDesde'];
+            $invoice->cbte_hasta = $data['FECAEDetRequest']['CbteDesde'];
+            $invoice->cbte_fch = Carbon::parse($data['FECAEDetRequest']['CbteFch']);
+            $invoice->cae = $result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CAE'];
+            $invoice->cae_fch_vto = Carbon::parse($result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CAEFchVto']);
+            $invoice->user_id = $data['user_id'];
+            $invoice->afip_data = collect($result)->toJson();
+            $invoice->vto_payment = null;
+            $invoice->commercial_reference = null;
+            $invoice->payment_type_id = $data['paymentType'];
+            $invoice->sales_condition_id = $data['saleCondition'];
+            $invoice->status_id = $this->status($data);
+            $invoice->parent_id = array_key_exists('parent', $data) ? $data['parent'] : null;
+            $invoice->fch_serv_desde = (!empty($data['FECAEDetRequest']['FchServDesde'])) ? Carbon::parse($data['FECAEDetRequest']['FchServDesde']) : null;
+            $invoice->fch_serv_hasta = (!empty($data['FECAEDetRequest']['FchServHasta'])) ? Carbon::parse($data['FECAEDetRequest']['FchServHasta']) : null;
+            $invoice->fch_vto_pago = (!empty($data['FECAEDetRequest']['FchVtoPago'])) ? Carbon::parse($data['FECAEDetRequest']['FchVtoPago']) : null;
+            $invoice->save();
 
-        $this->customer_cuenta_corriente_repository->store($invoice);
+            if (array_key_exists('parent', $data) && !isNull($data['parent'])) {
+                $si = SaleInvoices::find((int) $data['parent']);
+                $si->parent_id = $invoice->id;
+                $si->save();
+            }
+            // Crear items de la factura
+            $this->createInvoiceItems($invoice, $data['products']);
 
-        return $invoice;
-        /* } catch (\Exception $e) {
+            // Guardar comentario de la factura (si existe)
+            if (isset($data['comments'])) {
+                $this->createInvoiceComment($invoice, $data['comments']);
+            }
+
+            $this->customer_cuenta_corriente_repository->store($invoice);
+
+            return $invoice;
+        } catch (\Exception $e) {
 
             Log::error($e->getMessage());
-            throw new \Exception('Error al guardar la factura.');
-        } */
+            throw new \Exception('El comprobante se generó en AFIP y no se pudo registrar en la base de datos.');
+        }
     }
 
     private function createInvoiceItems(SaleInvoices $invoice, array $products): void
