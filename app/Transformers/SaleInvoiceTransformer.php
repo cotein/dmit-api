@@ -6,11 +6,14 @@ use App\Models\AfipState;
 use App\Models\SaleInvoices;
 use App\Src\Constantes;
 use App\Src\Helpers\ZeroLeft;
+use App\Src\Traits\AddressTrait;
 use Carbon\Carbon;
 use League\Fractal\TransformerAbstract;
 
+
 class SaleInvoiceTransformer extends TransformerAbstract
 {
+    use AddressTrait;
     /**
      * List of resources to automatically include
      *
@@ -73,7 +76,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
      * @param SaleInvoices $si The sale invoice model
      * @return array|null The customer's address or null if the customer does not have an address
      */
-    protected function address(SaleInvoices $si): ?array
+    /* protected function address(SaleInvoices $si): ?array
     {
         if ($si->customer->address()->exists()) {
             return [
@@ -85,7 +88,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
         }
 
         return null;
-    }
+    } */
 
     protected function concepto(array $afip_data): int
     {
@@ -243,12 +246,13 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 'afipDocument' => $si->company->afipDocument->name,
                 'activity_init' => $si->company->activity_init,
                 'iibb' => $si->company->iibb_conv,
-                'address' => [
+                /* 'address' => [
                     'city' => $si->company->address->city,
                     'street' => $si->company->address->street,
                     'cp' => $si->company->address->cp,
                     'state' => AfipState::where('afip_code', $si->company->address->state_id)->get()->first()->name
-                ],
+                ], */
+                'address' => $this->address($si->company),
                 'urlLogo' => $si->company->getMedia('logos')->first()->getFullUrl(),
             ],
 
@@ -262,7 +266,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 'afipInscription_id' => $si->customer->afipInscription->id,
                 'afipDocument' => $si->customer->afipDocument->name,
                 'afipDocTipo' => $si->customer->afipDocument->afip_code,
-                'address' => $this->address($si)
+                'address' => $this->address($si->customer)
             ],
 
             'voucher' => [

@@ -13,11 +13,16 @@ use Illuminate\Support\Facades\Route;
 use App\Models\CustomerCuentaCorriente;
 use App\Models\User;
 use App\Src\Helpers\Afip;
+use App\Src\Traits\AddressTrait;
 use Cotein\ApiAfip\AfipWebService as ApiAfipAfipWebService;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Facades\LogBatch;
 use Cotein\ApiAfip\AfipWebService;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Relation;
 
 Route::get('/', function () {
+    $c = SaleInvoices::find(1);
+    dd($c->company instanceof Company);
     return 'funciona';
 });

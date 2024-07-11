@@ -2,7 +2,7 @@
 
 namespace App\Src\Traits;
 
-class CategoryTrait
+trait CategoryTrait
 {
 
     public function categoriesHandler($categories)
