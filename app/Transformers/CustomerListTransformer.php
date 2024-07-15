@@ -44,7 +44,8 @@ class CustomerListTransformer extends TransformerAbstract
             'afipInscription_id' => $customer->afipInscription->id,
             'afipDocument' => $customer->afipDocument->name,
             'afipDocTipo' => $customer->afipDocument->afip_code,
-            'address' => $this->address($customer)
+            'address' => $this->address($customer),
+            'status' => ($customer->active) ? 'Activo' : 'Inactivo',
         ];
     }
 }

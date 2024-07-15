@@ -37,9 +37,23 @@ class CustomerController extends Controller
 
         $customers = $this->customerRepository->find($request);
 
-        $customers = fractal($customers, new CustomerTransformer())->toArray()['data'];
+        $data = fractal($customers, new CustomerTransformer())->toArray()['data'];
 
-        return response()->json($customers, 200);
+        $pagination = [
+            'total' => $customers->total(),
+            'per_page' => $customers->perPage(),
+            'current_page' => $customers->currentPage(),
+            'last_page' => $customers->lastPage(),
+            'from' => $customers->firstItem(),
+            'to' => $customers->lastItem()
+        ];
+
+        $response = [
+            'pagination' => $pagination,
+            'data' => $data
+        ];
+
+        return response()->json($response, 200);
     }
 
     /**

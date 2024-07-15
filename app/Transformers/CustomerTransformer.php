@@ -46,6 +46,8 @@ class CustomerTransformer extends TransformerAbstract
                 'name' => $customer->afipDocument->name,
                 'afip_code' => $customer->afipDocument->afip_code
             ],
+            'status' => ($customer->active) ? 'Activo' : 'Inactivo',
+
         ];
     }
 }

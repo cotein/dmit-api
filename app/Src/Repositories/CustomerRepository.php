@@ -17,20 +17,37 @@ class CustomerRepository
 
         $customers = $customers->where('company_id', (int) $request->company_id);
 
-        $customers = $customers->where('active', true);
-
         if ($customers->count() === 0) {
             return null;
         }
 
         if ($request->has('name')) {
             $customers = $customers->where(function ($query) use ($request) {
+                $query->whereRaw("CONCAT(name, ' ', last_name) LIKE ?", "%{$request->name}%");
+            });
+            /* $customers = $customers->where(function ($query) use ($request) {
                 $query->where('name', 'like', "%{$request->name}%")
                     ->orWhere('last_name', 'like', "%{$request->name}%")
                     ->orWhere('fantasy_name', 'like', "%{$request->name}%");
-            });
+            }); */
         }
-        return $customers->get();
+
+        if ($request->has('isActive')) {
+            $isActive = $request->isActive;
+
+            switch ($isActive) {
+                case 'active':
+                    $customers = $customers->where('active', true);
+                    break;
+                case 'inactive':
+                    $customers = $customers->where('active', false);
+                    break;
+            }
+        }
+
+        $customers->orderByRaw("TRIM(CONCAT(COALESCE(name, ''), ' ', COALESCE(last_name, '')))");
+
+        return $customers->paginate($request->itemsPerPage);
     }
 
     public function store(Request $request): Customer
