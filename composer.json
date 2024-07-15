@@ -78,15 +78,6 @@
             "php-http/discovery": true
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "/usr/packages/cotein/api-afip",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "minimum-stability": "stable",
     "prefer-stable": true
 }
