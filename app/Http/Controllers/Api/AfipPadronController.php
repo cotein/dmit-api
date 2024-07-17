@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Src\Constantes;
 use Carbon\Carbon;
+use Cotein\ApiAfip\Facades\AfipWebService;
 use Illuminate\Http\Request;
 
 class AfipPadronController extends Controller
