@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9da5558ed676fa0bfd09d9d9b65473cc",
+    "content-hash": "d781682c3241b04dadadfc397009486e",
     "packages": [
         {
             "name": "brick/math",
@@ -137,11 +137,17 @@
         },
         {
             "name": "cotein/api-afip",
-            "version": "dev-main",
+            "version": "1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/cotein/api-afip.git",
+                "reference": "3ad1b1cc39551471d39e4daeb1e62e9563569c18"
+            },
             "dist": {
-                "type": "path",
-                "url": "/usr/packages/cotein/api-afip",
-                "reference": "94679a531fa9ad0ae31125bd60149f7843db15b7"
+                "type": "zip",
+                "url": "https://api.github.com/repos/cotein/api-afip/zipball/3ad1b1cc39551471d39e4daeb1e62e9563569c18",
+                "reference": "3ad1b1cc39551471d39e4daeb1e62e9563569c18",
+                "shasum": ""
             },
             "require": {
                 "nesbot/carbon": "^2.16"
@@ -165,32 +171,7 @@
                     "Cotein\\ApiAfip\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Cotein\\ApiAfip\\Tests\\": "tests/"
-                }
-            },
-            "scripts": {
-                "post-autoload-dump": [
-                    "@php vendor/bin/testbench package:discover --ansi"
-                ],
-                "post-install-cmd": [
-                    "@php -r \"chown('-R', 'www-data:www-data', '/var/www/html/dmit-back/vendor/cotein/api-afip/src/Afip/WS/Xml');\"",
-                    "@php -r \"chmod('-R', '775', '/var/www/html/dmit-back/vendor/cotein/api-afip/src/Afip/WS/Xml');\"",
-                    "@echo 'El paquete se instaló correctamente.'",
-                    "@echo 'El paquete se funcionará correctamente.'"
-                ],
-                "post-update-cmd": [
-                    "@php -r \"chown('-R', 'www-data:www-data', '/var/www/html/dmit-back/vendor/cotein/api-afip/src/Afip/WS/Xml');\"",
-                    "@php -r \"chmod('-R', '775', '/var/www/html/dmit-back/vendor/cotein/api-afip/src/Afip/WS/Xml');\"",
-                    "@echo 'El paquete se actualizó correctamente.'"
-                ],
-                "post-package-install": [
-                    "@php -r \"chown('-R', 'www-data:www-data', '/var/www/html/dmit-back/vendor/cotein/api-afip/src/Afip/WS/Xml');\"",
-                    "@php -r \"chmod('-R', '775', '/var/www/html/dmit-back/vendor/cotein/api-afip/src/Afip/WS/Xml');\"",
-                    "@echo 'El paquete se instaló correctamente.'"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "authors": [
                 {
                     "name": "Diego Barrueta",
@@ -198,10 +179,11 @@
                 }
             ],
             "description": "Consumir los web services de Afip",
-            "transport-options": {
-                "symlink": true,
-                "relative": false
-            }
+            "support": {
+                "issues": "https://github.com/cotein/api-afip/issues",
+                "source": "https://github.com/cotein/api-afip/tree/1.1.0"
+            },
+            "time": "2024-07-17T17:37:12+00:00"
         },
         {
             "name": "defuse/php-encryption",
@@ -10995,9 +10977,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "cotein/api-afip": 20
-    },
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

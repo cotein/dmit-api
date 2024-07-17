@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\User;
-use Cotein\ApiAfip\Facades\Afip;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Src\Constantes;
@@ -47,9 +46,9 @@ class AfipPadronController extends Controller
     protected function getPadron($ws, User $user)
     {
         if (!$user->company) {
-            return Afip::findWebService($ws, Constantes::PRODUCTION_ENVIRONMENT, Constantes::DIEGO_BARRUETA_CUIT, 1, 1);
+            return AfipWebService::findWebService($ws, Constantes::PRODUCTION_ENVIRONMENT, Constantes::DIEGO_BARRUETA_CUIT, 1, 1);
         }
-        return Afip::findWebService($ws, Constantes::PRODUCTION_ENVIRONMENT, $user->company->afip_number, $user->company->id, $user->id);
+        return AfipWebService::findWebService($ws, Constantes::PRODUCTION_ENVIRONMENT, $user->company->afip_number, $user->company->id, $user->id);
     }
 
     protected function getPersonaData($ws, $cuit)

@@ -8,6 +8,7 @@ use App\Src\Helpers\Afip as AfipHelper;
 use App\Exceptions\Afip\FEParamGetPtosVentaException;
 use App\Exceptions\Afip\FECompUltimoAutorizadoException;
 use Cotein\ApiAfip\Facades\Afip;
+use Cotein\ApiAfip\Facades\AfipWebService;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -24,7 +25,7 @@ class WSFacturaElectronica
             $environment = 'testing';
         }
 
-        $this->wsfe = Afip::findWebService('factura', $environment, request()->company_cuit,  request()->company_id,  request()->user_id);
+        $this->wsfe = AfipWebService::findWebService('factura', $environment, request()->company_cuit,  request()->company_id,  request()->user_id);
     }
     public function FECompUltimoAutorizado(Request $request)
     {

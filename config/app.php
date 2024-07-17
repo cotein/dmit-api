@@ -187,6 +187,7 @@ return [
     */
 
     'aliases' => Facade::defaultAliases()->merge([
+        //'AfipWebService' => Cotein\ApiAfip\Facades\AfipWebService::class,
         'AfipWebService' => Cotein\ApiAfip\Facades\AfipWebService::class,
     ])->toArray(),
 
