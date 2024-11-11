@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Transformers\SaleInvoiceTransformer;
 use App\Src\Repositories\SaleInvoiceRepository;
 use App\Transformers\SaleInvoicePrintTransformer;
+use App\Transformers\SaleInvoiceReceiptTransformer;
+use App\Transformers\SaleInvoiceWithPreviousPayments;
 
 class SaleInvoiceController extends Controller
 {
@@ -22,6 +24,13 @@ class SaleInvoiceController extends Controller
     public function index(Request $request)
     {
         $invoices = $this->saleInvoiceRepository->find($request);
+
+        if ($request->has('getPaymentOnReceipt')) {
+
+            $invoices = fractal($invoices, new SaleInvoiceReceiptTransformer())->toArray()['data'];
+
+            return response()->json($invoices, 200);
+        }
 
         if (!$request->has('print')) {
 
@@ -39,7 +48,7 @@ class SaleInvoiceController extends Controller
 
         if ($request->has('invoice_id')) {
 
-            $invoices = fractal($invoices, new SaleInvoiceTransformer())->toArray()['data'];
+            $invoices = fractal($invoices, new SaleInvoiceWithPreviousPayments())->toArray()['data'];
 
             return response()->json($invoices, 200);
         }

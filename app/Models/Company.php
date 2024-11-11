@@ -60,6 +60,11 @@ class Company extends Model implements Auditable, HasMedia
         return $this->hasMany(CustomerCuentaCorriente::class);
     }
 
+    public function cbus(): HasMany
+    {
+        return $this->hasMany(Cbu::class, 'company_id', 'id');
+    }
+
     public function getNextReceiptNumber()
     {
         $lastReceipt = $this->receipts()->latest('number')->first();

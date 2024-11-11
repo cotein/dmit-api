@@ -15,6 +15,9 @@ use App\Models\SaleInvoicesComments;
 
 use function PHPUnit\Framework\isNull;
 use App\Src\Repositories\CustomerCuentaCorrienteRepository;
+use App\Src\Strategy\InvoiceStatus\InvoiceStatusContext;
+use App\Src\Strategy\InvoiceStatus\InvoiceStatusDefaultStrategy;
+use App\Src\Strategy\InvoiceStatus\InvoiceStatusNotaCreditoStrategy;
 
 class SaleInvoiceRepository
 {
@@ -37,6 +40,10 @@ class SaleInvoiceRepository
 
         if ($request->has('invoice_id')) {
             $query->where('id', $request->invoice_id);
+        }
+
+        if ($request->has('getPaymentOnReceipt')) {
+            $query->whereIn('status_id', [Constantes::ADEUDADA, Constantes::PARCIALMENTE_CANCELADA]);
         }
 
         if ($request->has('from') && $request->has('to')) {
@@ -68,81 +75,91 @@ class SaleInvoiceRepository
         return $query->get();
     }
 
-    private function status($data): int
+    private function status($data, $invoice): void
     {
-        $saleCondition_id = (int) $data['saleCondition'];
+        $strategy = null;
 
-        $saleCondition = SaleCondition::find($saleCondition_id);
-
-        if ($saleCondition->days === 0) {
-            return Constantes::CANCELADA;
+        if (in_array($data['FeCabReq']['CbteTipo'], Constantes::IS_FACTURA_AFIP_CODE)) {
+            $strategy = new InvoiceStatusDefaultStrategy();
+        }
+        if (in_array($data['FeCabReq']['CbteTipo'], Constantes::IS_NOTA_CREDITO_AFIP_CODE)) {
+            $strategy = new InvoiceStatusNotaCreditoStrategy();
         }
 
-        return Constantes::ADEUDADA;
+        $context = new InvoiceStatusContext($strategy);
+
+        $status = $context->executeStrategy($data, $invoice);
+        $invoice->status_id = $status;
+        $invoice->save();
     }
 
     public function store($data): SaleInvoices
     {
-        try {
-            $voucher = $data['FeCabReq']['CbteTipo'];
+        //try {
+        $saleCondition = SaleCondition::find($data['saleCondition']);
 
-            if ($voucher < 10) {
-                $voucher = '00' . $voucher;
-            } elseif ($voucher < 100) {
-                $voucher = '0' . $voucher;
-            } else {
-                $voucher = (string) $voucher;
-            }
+        $voucher = (int) $data['FeCabReq']['CbteTipo'];
 
-            $voucher_id = AfipVoucher::where('afip_code', $voucher)->get()->first()->id;
+        if ($voucher < 10) {
+            $voucher = '00' . $voucher;
+        } elseif ($voucher < 100) {
+            $voucher = '0' . $voucher;
+        } else {
+            $voucher = (string) $voucher;
+        }
 
-            $result = json_decode(json_encode($data['result']), true);
+        $voucher_id = AfipVoucher::where('afip_code', $voucher)->get()->first()->id;
 
-            // Crear la nueva factura
-            $invoice = new SaleInvoices();
-            $invoice->company_id = $data['company_id'];
-            $invoice->customer_id = array_key_exists('value', $data['customer']) ? $data['customer']['value'] : $data['customer']['id'];
-            $invoice->voucher_id = $voucher_id;
-            $invoice->pto_vta = $data['FeCabReq']['PtoVta'];
-            $invoice->cbte_desde = $data['FECAEDetRequest']['CbteDesde'];
-            $invoice->cbte_hasta = $data['FECAEDetRequest']['CbteDesde'];
-            $invoice->cbte_fch = Carbon::parse($data['FECAEDetRequest']['CbteFch']);
-            $invoice->cae = $result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CAE'];
-            $invoice->cae_fch_vto = Carbon::parse($result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CAEFchVto']);
-            $invoice->user_id = $data['user_id'];
-            $invoice->afip_data = collect($result)->toJson();
-            $invoice->vto_payment = null;
-            $invoice->commercial_reference = null;
-            $invoice->payment_type_id = $data['paymentType'];
-            $invoice->sales_condition_id = $data['saleCondition'];
-            $invoice->status_id = $this->status($data);
-            $invoice->parent_id = array_key_exists('parent', $data) ? $data['parent'] : null;
-            $invoice->fch_serv_desde = (!empty($data['FECAEDetRequest']['FchServDesde'])) ? Carbon::parse($data['FECAEDetRequest']['FchServDesde']) : null;
-            $invoice->fch_serv_hasta = (!empty($data['FECAEDetRequest']['FchServHasta'])) ? Carbon::parse($data['FECAEDetRequest']['FchServHasta']) : null;
-            $invoice->fch_vto_pago = (!empty($data['FECAEDetRequest']['FchVtoPago'])) ? Carbon::parse($data['FECAEDetRequest']['FchVtoPago']) : null;
-            $invoice->save();
+        $result = json_decode(json_encode($data['result']), true);
 
-            if (array_key_exists('parent', $data) && !isNull($data['parent'])) {
-                $si = SaleInvoices::find((int) $data['parent']);
-                $si->parent_id = $invoice->id;
-                $si->save();
-            }
-            // Crear items de la factura
-            $this->createInvoiceItems($invoice, $data['products']);
+        // Crear la nueva factura
+        $invoice = new SaleInvoices();
+        $invoice->company_id = $data['company_id'];
+        $invoice->customer_id = array_key_exists('value', $data['customer']) ? $data['customer']['value'] : $data['customer']['id'];
+        $invoice->voucher_id = $voucher_id;
+        $invoice->pto_vta = $data['FeCabReq']['PtoVta'];
+        $invoice->cbte_desde = $result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteDesde'];
+        $invoice->cbte_hasta = $result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteHasta'];
+        $invoice->cbte_fch = Carbon::parse($data['FECAEDetRequest']['CbteFch']);
+        $invoice->cae = $result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CAE'];
+        $invoice->cae_fch_vto = Carbon::parse($result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CAEFchVto']);
+        $invoice->user_id = $data['user_id'];
+        $invoice->afip_data = collect($result)->toJson();
+        $invoice->vto_payment = null;
+        $invoice->commercial_reference = null;
+        $invoice->payment_type_id = $data['paymentType'];
+        $invoice->sales_condition_id = $data['saleCondition'];
+        //$invoice->status_id = $this->status($data);
+        $invoice->parent_id = array_key_exists('parent', $data) ? $data['parent'] : null;
+        $invoice->fch_serv_desde = (!empty($data['FECAEDetRequest']['FchServDesde'])) ? Carbon::parse($data['FECAEDetRequest']['FchServDesde']) : null;
+        $invoice->fch_serv_hasta = (!empty($data['FECAEDetRequest']['FchServHasta'])) ? Carbon::parse($data['FECAEDetRequest']['FchServHasta']) : null;
+        $invoice->fch_vto_pago = (!empty($data['FECAEDetRequest']['FchVtoPago'])) ? Carbon::parse($data['FECAEDetRequest']['FchVtoPago']) : Carbon::parse($data['FECAEDetRequest']['CbteFch'])->addDays($saleCondition->days);
+        $invoice->save();
 
-            // Guardar comentario de la factura (si existe)
-            if (isset($data['comments'])) {
-                $this->createInvoiceComment($invoice, $data['comments']);
-            }
+        if (array_key_exists('parent', $data) && !isNull($data['parent'])) {
+            $si = SaleInvoices::find((int) $data['parent']);
+            $si->parent_id = $invoice->id;
+            $si->save();
+        }
+        // Crear items de la factura
+        $this->createInvoiceItems($invoice, $data['products']);
 
-            $this->customer_cuenta_corriente_repository->store($invoice);
+        $this->status($data, $invoice);
 
-            return $invoice;
-        } catch (\Exception $e) {
+        // Guardar comentario de la factura (si existe)
+        if (isset($data['comments'])) {
+            $this->createInvoiceComment($invoice, $data['comments']);
+        }
+
+        $invoice->refresh();
+        $this->customer_cuenta_corriente_repository->store($invoice);
+
+        return $invoice;
+        /* } catch (\Exception $e) {
 
             Log::error($e->getMessage());
             throw new \Exception('El comprobante se generó en AFIP y no se pudo registrar en la base de datos.');
-        }
+        } */
     }
 
     private function createInvoiceItems(SaleInvoices $invoice, array $products): void
@@ -156,19 +173,24 @@ class SaleInvoiceRepository
             $item->neto_import = array_key_exists('subtotal', $product) ? $product['subtotal'] : $product['neto_import'];
             $item->iva_import = $product['iva_import'];
             $item->iva_id = array_key_exists('iva', $product) ? $product['iva']['id'] : $product['iva_id'];
-            $item->discount_percentage = 0;
-            $item->discount_import = 0;
+            $item->discount_percentage = array_key_exists('discount_percentage', $product) ? $product['discount_percentage'] : 0;
+            $item->discount_import = array_key_exists('discount_import', $product) ? $product['discount_import'] : $product['discount'];
             $item->total = $product['total'];
+            //$item->total = $product['total'] + $product['percep_iibb_import'] + $product['percep_iva_import'];
             $item->obs = null;
             $item->unit_price = array_key_exists('unit', $product) ? $product['unit'] : $product['unit_price'];
             //$item->unit_price = $product['unit'];
             $item->price_list_id = array_key_exists('priceList', $product) ? $product['priceList']['id'] : null;
             $item->voucher_id = $invoice->voucher_id;
-            $item->aditional_percentage = array_key_exists('aditional', $product) ? $product['aditional']['percentage'] : 0;
-            $item->aditional_value = array_key_exists('aditional', $product) ? ($product['unit'] * $product['quantity']) - ($product['price_base'] * $product['quantity']) : 0;
+            /* $item->aditional_percentage = array_key_exists('aditional', $product) ? $product['aditional']['percentage'] : 0;
+            $item->aditional_value = array_key_exists('aditional', $product) ? ($product['unit'] * $product['quantity']) - ($product['price_base'] * $product['quantity']) : 0; */
+            $item->aditional_percentage =  0;
+            $item->aditional_value =  0;
+            $item->percep_iibb_alicuota = $product['percep_iibb_alicuota'];
+            $item->percep_iibb_import = $product['percep_iibb_import'];
+            $item->percep_iva_alicuota = $product['percep_iva_alicuota'];
+            $item->percep_iva_import = $product['percep_iva_import'];
             $item->save();
-
-            unset($item);
         });
     }
 

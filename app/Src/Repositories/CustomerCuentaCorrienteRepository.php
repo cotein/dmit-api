@@ -74,9 +74,9 @@ class CustomerCuentaCorrienteRepository
 
         if ($model instanceof SaleInvoices) {
             if ($IS_NOTA_CREDITO->contains($model->voucher_id)) {
-                $cuentaCorriente->sale = $model->items->sum('total') * -1;
+                $cuentaCorriente->sale = $model->totalInvoiced() * -1;
             } else {
-                $cuentaCorriente->sale = $model->items->sum('total');
+                $cuentaCorriente->sale = $model->totalInvoiced();
             }
         } elseif ($model instanceof Receipt) {
             $cuentaCorriente->pay = $model->total;

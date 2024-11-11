@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use Exception;
 use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use App\Http\Controllers\Controller;
-use Exception;
 use Illuminate\Auth\Events\Verified;
 use Lcobucci\JWT\Signer\Ecdsa\Sha256;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -27,13 +28,13 @@ class EmailVerificationController extends Controller
             return response()->json('Cuenta ya verificada, inicie sesión en el Sistema', 200);
         }
 
-        /* if (!$request->hasValidSignature()) {
-            return response()->json('Firma inválida en la petición', 400);
-        } */
-
         if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
             return response()->json('Hash de verificación no coincide', 400);
         }
+        /* Log::info('hasValidRelativeSignature ' . $request->hasValidRelativeSignature());
+        if (!$request->hasValidRelativeSignature()) {
+            return response()->json('Firma inválida en la petición', 400);
+        } */
 
         try {
             $user->active = 1;

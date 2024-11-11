@@ -27,12 +27,14 @@ class AfipFacturaElectronicaController extends Controller
     /**
      * Returns the last authorized invoice number.
      *
-     * @param Request $request The request object
      * @return array An array containing the last authorized invoice number
      */
     public function FECompUltimoAutorizado(Request $request)
     {
-        $result =  $this->afipWS->FECompUltimoAutorizado($request);
+        $CbteTipo = $request->CbteTipo;
+        $PtoVta = $request->PtoVta;
+
+        $result =  $this->afipWS->FECompUltimoAutorizado($CbteTipo, $PtoVta);
 
         return response()->json($result, 200);
     }
@@ -52,14 +54,10 @@ class AfipFacturaElectronicaController extends Controller
     }
 
     /**
-     * Solicita un comprobante de egreso electrónico a través de la API de AFIP.
+     * Handle the request to solicit FECAE (Factura Electronica Comprobante Autorizado Electrónico).
      *
-     * @param Request $request Contiene la información necesaria para generar el comprobante,
-     * como el tipo de comprobante, el tipo de documento de identificación del emisor, el
-     * número de identificación del emisor, el número de serie del comprobante, el total
-     * a pagar, los detalles de los conceptos, entre otros.
-     *
-     * @return array El comprobante generado en formato XML.
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
     public function FECAESolicitar(Request $request)
     {
@@ -76,30 +74,58 @@ class AfipFacturaElectronicaController extends Controller
             'products' => 'required|array|min:1',
         ]);
 
+        $invoiceData = $this->prepareInvoiceData($request);
 
-        $now = Carbon::now();
+        if ($request->isMiPyme) {
+            $result = $this->afipWS->FECAESolicitar($request->all());
 
-        LogBatch::startBatch();
+            $invoiceData['result'] = json_decode(json_encode($result), true);
 
-        $batch_uuid = $now->timestamp . $now->milli;
+            if ($this->isRejected($invoiceData['result'])) {
+                $this->handleRejection($invoiceData['result'], $request);
+            }
 
-        $activity = [
-            'log_name' => 'SOLICITUD DE FACTURA ELECTRONICA',
-            'description' => 'SE UTILIZA WSFEV1 DE AFIP',
-            'subject_type' => null,
-            'subject_id' => null,
-            'causer_type' => 'App\Models\User;',
-            'causer_id' => auth()->user()->id,
-            'company_id' => $request->company_id,
-            'properties' => $request->all(),
-            'batch_uuid' => $batch_uuid
-        ];
+            $invoice = CreatedInvoice::dispatch($invoiceData);
 
-        ActivityLog::save($activity);
+            return response()->json(['CbteTipo' => $invoiceData['FeCabReq']['CbteTipo'], 'invoice' => $invoice], 201);
+        }
 
-        $result =  $this->afipWS->FECAESolicitar($request);
+        $clonedRequest = $request->all();
 
-        $invoiceData = [
+        $date = Carbon::parse($request->FECAEDetRequest['CbteFch'])->format('Y-m-d');
+
+        $result = $this->afipWS->consultarMontoObligadoRecepcion($request->customer['cuit'], $date);
+
+        $array = json_decode(json_encode($result->consultarMontoObligadoRecepcionReturn), true);
+
+        if ($array['obligado'] === 'S' && $request->FECAEDetRequest['ImpTotal'] >= (float)$array['montoDesde']) {
+            $clonedRequest['FeCabReq']['CbteTipo'] = $this->getCbteTipo($request->FeCabReq['CbteTipo']);
+            $result = $this->afipWS->FECompUltimoAutorizado($clonedRequest['FeCabReq']['CbteTipo'], $request->FeCabReq['PtoVta']);
+            $clonedRequest['FECAEDetRequest']['CbteDesde'] = $result->FECompUltimoAutorizadoResult->CbteNro + 1;
+            $clonedRequest['FECAEDetRequest']['CbteHasta'] = $result->FECompUltimoAutorizadoResult->CbteNro + 1;
+
+            return response()->json([
+                'isMipyme' => true,
+                'CbteTipo' => $clonedRequest['FeCabReq']['CbteTipo'],
+                'CbteDesde' => $clonedRequest['FECAEDetRequest']['CbteDesde'],
+                'CbteHasta' => $clonedRequest['FECAEDetRequest']['CbteHasta']
+            ], 200);
+        }
+
+        $invoice = $this->processNonMiPymeRequest($clonedRequest, $request, $invoiceData);
+
+        return response()->json(['CbteTipo' => $invoiceData['FeCabReq']['CbteTipo'], 'invoice' => $invoice], 201);
+    }
+
+    /**
+     * Prepares the invoice data for processing.
+     *
+     * @param mixed $request The request data.
+     * @return void
+     */
+    private function prepareInvoiceData($request)
+    {
+        return [
             'FeCabReq' => $request->FeCabReq,
             'FECAEDetRequest' => $request->FECAEDetRequest,
             'environment' => $request->environment,
@@ -111,61 +137,111 @@ class AfipFacturaElectronicaController extends Controller
             'paymentType' => $request->paymentType,
             'customer' => $request->customer,
             'comments' => $request->comments,
-            'parent' => ($request->has('parent')) ? $request->parent : null,
-            'result' => $result
+            'parent' => $request->has('parent') ? $request->parent : null,
         ];
+    }
 
-        $reject = json_decode(json_encode($result), true);
-        /*  Log::alert($reject);
-        print_r($reject); */
-        /* if ($reject['FECAESolicitarResult']['FeCabResp']['Resultado'] === 'R') {
-            if (isset($reject['FECAESolicitarResult']['FECAEDetResponse'][0]['Observaciones'])) {
+    /**
+     * Checks if the result of a process is rejected.
+     *
+     * @param mixed $result The result of the process.
+     * @return bool Returns true if the result is rejected, false otherwise.
+     */
+    private function isRejected($result)
+    {
+        return $result['FECAESolicitarResult']['FeCabResp']['Resultado'] === 'R';
+    }
 
-                $observaciones = $reject['FECAESolicitarResult']['FECAEDetResponse'][0]['Observaciones'];
+    private function handleRejection($result, $request)
+    {
+        if (isset($result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Observaciones'])) {
+            $observaciones = $result['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Observaciones']['Obs'];
+            $mensajes = array_map(fn($obs) => $obs['Msg'], $observaciones);
 
-                $activity['log_name'] = Constantes::FECAESolicitar;
+            $activity = [
+                'log_name' => Constantes::FECAESolicitar,
+                'description' => collect($mensajes)->toJson(),
+                'causer_type' => 'App\Models\User',
+                'causer_id' => auth()->user()->id,
+                'company_id' => $request->company_id,
+                'properties' => collect($request->all())->toJson(),
+                'batch_uuid' => ''
+            ];
+            ActivityLog::save($activity);
 
-                $activity['properties'] = $reject;
+            throw new Exception(implode(', ', $mensajes));
+        }
+    }
 
-                ActivityLog::save($activity);
+    /**
+     * Retrieves the CbteTipo based on the given $cbteTipo.
+     *
+     * @param int $cbteTipo The CbteTipo to retrieve.
+     * @return mixed The retrieved CbteTipo.
+     */
+    private function getCbteTipo($cbteTipo)
+    {
+        $types = [
+            1 => Constantes::WSFECRED['FCA'],
+            2 => Constantes::WSFECRED['NDA'],
+            3 => Constantes::WSFECRED['NCA'],
+            6 => Constantes::WSFECRED['FCB'],
+            7 => Constantes::WSFECRED['NDB'],
+            8 => Constantes::WSFECRED['NCB'],
+            11 => Constantes::WSFECRED['FCC'],
+            12 => Constantes::WSFECRED['NDC'],
+            13 => Constantes::WSFECRED['NCC'],
+        ];
+        return $types[(int)$cbteTipo] ?? $cbteTipo;
+    }
 
-                throw new Exception($observaciones['Obs'][0]['Msg']);
-            }
-        } */
-        if ($reject['FECAESolicitarResult']['FeCabResp']['Resultado'] === 'R') {
+    /**
+     * Process a non-MiPyme request.
+     *
+     * @param mixed $clonedRequest The cloned request object.
+     * @param mixed $request The original request object.
+     * @param array $invoiceData The invoice data.
+     * @return void
+     */
+    private function processNonMiPymeRequest($clonedRequest, $request, $invoiceData)
+    {
+        $ultAutorizado = $this->afipWS->FECompUltimoAutorizado($clonedRequest['FeCabReq']['CbteTipo'], $request->FeCabReq['PtoVta']);
 
-            if (isset($reject['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Observaciones'])) {
+        $array = json_decode(json_encode($ultAutorizado), true);
 
-                $observaciones = $reject['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Observaciones']['Obs'];
-                $mensajes = array_map(function ($observacion) {
-                    return $observacion['Msg'];
-                }, $observaciones);
+        $clonedRequest['FECAEDetRequest']['CbteDesde'] = $array['FECompUltimoAutorizadoResult']['CbteNro'] + 1;
+        $clonedRequest['FECAEDetRequest']['CbteHasta'] = $array['FECompUltimoAutorizadoResult']['CbteNro'] + 1;
+        $now = Carbon::now();
+        LogBatch::startBatch();
+        $batch_uuid = $now->timestamp . $now->milli;
 
-                $activity['log_name'] = Constantes::FECAESolicitar;
+        $activity = [
+            'log_name' => 'SOLICITUD DE FACTURA ELECTRONICA',
+            'description' => 'SE UTILIZA WSFEV1 DE AFIP',
+            'causer_type' => 'App\Models\User',
+            'causer_id' => auth()->user()->id,
+            'company_id' => $request->company_id,
+            'properties' => $request->all(),
+            'batch_uuid' => $batch_uuid
+        ];
+        ActivityLog::save($activity);
 
-                $activity['properties'] = $reject;
+        $result = $this->afipWS->FECAESolicitar($clonedRequest);
 
-                ActivityLog::save($activity);
+        $invoiceData['result'] = json_decode(json_encode($result), true);
 
-                throw new Exception(implode(', ', $mensajes));
-            }
+        if ($this->isRejected($invoiceData['result'])) {
+            $this->handleRejection($invoiceData['result'], $request);
         }
 
         $invoice = CreatedInvoice::dispatch($invoiceData);
 
         $activity['log_name'] = 'RESULTADO DE FACTURA ELECTRONICA';
         $activity['properties'] = $result;
-
         ActivityLog::save($activity);
 
-        LogBatch::getUuid(); // save batch id to retrieve activities later
+        LogBatch::getUuid();
         LogBatch::endBatch();
-
-        $data = [
-            'CbteTipo' => $invoiceData['FeCabReq']['CbteTipo'],
-            'invoice' => $invoice
-        ];
-
-        return response()->json($data, 201);
+        return $invoice;
     }
 }

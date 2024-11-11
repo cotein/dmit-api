@@ -15,9 +15,9 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, array<int, class-string>>
      */
     protected $listen = [
-        Registered::class => [
+        /* Registered::class => [
             SendEmailVerificationNotification::class,
-        ],
+        ], */
         \SocialiteProviders\Manager\SocialiteWasCalled::class => [
             // ... other providers
             \SocialiteProviders\MercadoLibre\MercadoLibreExtendSocialite::class . '@handle',
@@ -28,7 +28,10 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\SavedInvoice::class => [
             \App\Listeners\AddMovementToGeneralJournal::class,
 
-        ]
+        ],
+        \App\Events\RegisteredUser::class => [
+            \App\Listeners\SendEmailVerificationNotification::class,
+        ],
     ];
 
     /**

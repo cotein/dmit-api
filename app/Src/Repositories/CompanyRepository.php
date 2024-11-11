@@ -3,14 +3,27 @@
 namespace App\Src\Repositories;
 
 use Carbon\Carbon;
+use App\Models\Cbu;
 use App\Models\Company;
 use App\Src\Constantes;
-use App\Src\Helpers\ActivityLog;
 use Illuminate\Http\Request;
+use App\Src\Helpers\ActivityLog;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CompanyRepository
 {
+    private function saveCbu($data, Company $company): void
+    {
+        $cbu = new Cbu();
+        $cbu->company_id = $company->id;
+        $cbu->bank_id = $data['bank_id'];
+        $cbu->cbu = $data['cbu'];
+        $cbu->alias = $data['alias'];
+        $cbu->cta_cte = $data['ctaCte'];
+        $cbu->save();
+        $cbu->refresh();
+    }
 
     private function saveCompany(array $data, Company $company = null): Company
     {
@@ -55,6 +68,22 @@ class CompanyRepository
             $company->environment = $data['afip_environment'];
             $company->activity_init = Carbon::parse($data['activity_init'])->format('Y-m-d');
 
+            if (!empty($data['phone1'])) {
+                $company->phone1 = $data['phone1'];
+            }
+
+            if (!empty($data['phone2'])) {
+                $company->phone2 = $data['phone2'];
+            }
+
+            if (!empty($data['email'])) {
+                $company->email = $data['email'];
+            }
+
+            if (!empty($data['webSite'])) {
+                $company->web_site = $data['webSite'];
+            }
+
             $company->save();
             $company->refresh();
 
@@ -65,6 +94,26 @@ class CompanyRepository
 
                     $company->address()->create($data['address']);
                 }
+            }
+
+            $cbus = collect($data['cbus']);
+
+            if ($cbus->isNotEmpty()) {
+
+                $cbus->each(function ($cbuData) use ($company) {
+                    Log::info('ctaCte: ' . $cbuData['ctaCte']);
+                    $cbu = Cbu::updateOrCreate(
+                        [
+                            'cbu' => $cbuData['cbu'],
+                            'company_id' => $company->id
+                        ],
+                        [
+                            'bank_id' => $cbuData['bank_id'],
+                            'alias' => strtoupper($cbuData['alias']),
+                            'cta_cte' => strtoupper($cbuData['ctaCte'])
+                        ]
+                    );
+                });
             }
 
             DB::commit();
@@ -78,12 +127,8 @@ class CompanyRepository
         }
     }
 
-    public function saveLogo(Request $request)
-    {
-    }
-    public function find(Request $request)
-    {
-    }
+    public function saveLogo(Request $request) {}
+    public function find(Request $request) {}
 
     public function store(Request $request): Company
     {

@@ -7,6 +7,7 @@ use App\Events\CreatedInvoice;
 use App\Src\Repositories\ReceiptRepository;
 use App\Transformers\SaleInvoiceTransformer;
 use App\Src\Repositories\SaleInvoiceRepository;
+use Illuminate\Support\Facades\Log;
 
 class SaveInvoice
 {
@@ -33,7 +34,7 @@ class SaveInvoice
         $invoice = $this->saleInvoiceRepository->store($data);
 
         $transformedInvoice = fractal($invoice, new SaleInvoiceTransformer())->toArray()['data'];
-
+        Log::info('Invoice created: ' . collect($invoice)->toJson());
         $this->receiptRepository->store($invoice);
 
         SavedInvoice::dispatch($transformedInvoice);

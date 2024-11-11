@@ -2,6 +2,7 @@
 
 namespace App\Src\Helpers;
 
+use Illuminate\Support\Facades\Log;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityLog
@@ -25,15 +26,15 @@ class ActivityLog
     public static function save($data): void
     {
         $activity = new Activity();
-        $activity->log_name = $data['log_name'];
-        $activity->description = $data['description'];
-        $activity->subject_type = $data['subject_type'];
-        $activity->subject_id = $data['subject_id'];
-        $activity->causer_type = $data['causer_type'];
-        $activity->causer_id = $data['causer_id'];
-        $activity->company_id = $data['company_id'];
-        $activity->properties = $data['properties'];
-        $activity->batch_uuid = $data['batch_uuid'];
+        $activity->log_name = (isset($data['log_name'])) ? $data['log_name'] : '';
+        $activity->description = (isset($data['description'])) ? $data['description'] : '';
+        $activity->subject_type = (isset($data['subject_type'])) ? $data['subject_type'] : '';
+        $activity->subject_id = (isset($data['subject_id'])) ? $data['subject_id'] : '';
+        $activity->causer_type = (isset($data['causer_type'])) ? $data['causer_type'] : '';
+        $activity->causer_id = (isset($data['causer_id'])) ? $data['causer_id'] : '';
+        $activity->company_id = (isset($data['company_id'])) ? $data['company_id'] : '';
+        $activity->properties = (isset($data['properties'])) ? $data['properties'] : '';
+        $activity->batch_uuid = (isset($data['batch_uuid'])) ? $data['batch_uuid'] : '';
 
         $activity->save();
     }

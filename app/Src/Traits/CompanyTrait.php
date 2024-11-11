@@ -2,8 +2,52 @@
 
 namespace App\Src\Traits;
 
+use App\Src\Traits\ImageBase64Trait;
+
 trait CompanyTrait
 {
+    use ImageBase64Trait;
+
+    private function localidad($company): string
+    {
+        // Obtener el campo afip_data de la tabla companies
+        if (!$company) {
+            return "Company not found.";
+        }
+
+        $afipData = json_decode($company->afip_data, true);
+
+        // Verificar si el JSON fue decodificado correctamente
+        if (json_last_error() === JSON_ERROR_NONE) {
+            // Acceder a la propiedad localidad
+            $localidad = $afipData['datosGenerales']['domicilioFiscal']['localidad'] ?? null;
+
+            if ($localidad) {
+                return $localidad;
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private function address($company): array
+    {
+        return [
+            'state_id' => $company->address->state_id ?? null,
+            'city' => $company->address->city ?? '',
+            'street' => $company->address->street ?? '',
+            'cp' => $company->address->cp ?? '',
+            'number' => $company->address->number ?? '',
+            'obs' =>  $company->address->obs ?? '',
+            'between_streets' => $company->address->between_streets ?? '',
+            'addressable_id' => $company->address->addressable_id ?? '',
+            'addressable_type' => $company->address->addressable_type ?? '',
+            'localidad' => $this->localidad($company),
+        ];
+    }
+
     public function vouchers($company): array
     {
         $vouchers = $company->afip_vouchers->transform(function ($voucher, int $key) {
@@ -18,6 +62,24 @@ trait CompanyTrait
         return $vouchers->toArray();
     }
 
+    private function setCbus($company): array
+    {
+        if ($company->cbus) {
+            return $company->cbus->transform(function ($cbu, int $key) {
+                return [
+                    'id' => $cbu->id,
+                    'alias' => $cbu->alias,
+                    'bank_id' => $cbu->bank->id,
+                    'name' => $cbu->bank->name,
+                    'cbu' => $cbu->cbu,
+                    'ctaCte' => $cbu->cta_cte,
+                ];
+            })->toArray();
+        } else {
+            return [];
+        }
+    }
+
     public function setMyCompanies($user): array
     {
 
@@ -26,20 +88,14 @@ trait CompanyTrait
             $logo = $company->getMedia('logos')->first();
 
             if ($logo) {
-                // Obtén el contenido binario de la imagen
-                $imagePath = $logo->getPath();
-                $imageContent = file_get_contents($imagePath);
-                // Convierte el contenido binario a Base64
-                $base64Image = base64_encode($imageContent);
-                // Prepara la cadena para usar como fuente de imagen en HTML, si es necesario
-                $logo_base64 = 'data:image/' . $logo->extension . ';base64,' . $base64Image;
+                $logo_base64 = $this->convertImageToBase64($logo);
             } else {
                 $logo_base64 = null;
             }
 
             return [
                 'activity_init' => $company->activity_init,
-                'address' => $company->address,
+                'address' => $this->address($company),
                 'afip_environment' => $company->environment,
                 'billing_concept' => $company->billing_concept,
                 'created_at' => $company->created_at,
@@ -61,6 +117,11 @@ trait CompanyTrait
                 'type_company' => $company->afip_type,
                 'user_id' => auth()->user()->id,
                 'vouchers' => $this->vouchers($company),
+                'cbus' => $this->setCbus($company),
+                'webSite' => $company->web_site,
+                'phone1' => $company->phone1,
+                'phone2' => $company->phone2,
+                'email' => $company->email,
             ];
         })->toArray();
     }

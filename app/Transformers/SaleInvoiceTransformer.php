@@ -59,6 +59,13 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 'iva_afip_code' => $item->iva->code,
                 'iva_id' => $item->iva->id,
                 'unit_price' => $item->unit_price,
+                'discount_percentage' => $item->discount_percentage,
+                'discount_import' => $item->discount_import,
+                'price_list_id' => $item->price_list_id,
+                'percep_iibb_alicuota' => (float) $item->percep_iibb_alicuota,
+                'percep_iibb_import' => (float) $item->percep_iibb_import,
+                'percep_iva_alicuota' => (float) $item->percep_iva_alicuota,
+                'percep_iva_import' => (float) $item->percep_iva_import,
                 //'unit_price' => number_format($item->neto_import / $item->quantity, 2, ',', '.'),
                 'total' => $item->total
             ];
@@ -67,7 +74,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
 
     protected function totalInvoice(SaleInvoices $si)
     {
-        return $si->items->sum('total');
+        return $si->items->sum('total') + $si->items->sum('percep_iibb_import') + $si->items->sum('percep_iva_import');
     }
 
     /**
@@ -233,9 +240,17 @@ class SaleInvoiceTransformer extends TransformerAbstract
     {
         $afip_data = json_decode($si->afip_data, TRUE);
 
+        $url_logo = null;
+
+        if ($si->company->hasMedia('logos')) {
+            $url_logo = $si->company->getMedia('logos')->first()->getFullUrl();
+        }
+
         return [
             'key' => $this->getCurrentIteration(),
+
             'id' => $si->id,
+
             'company' => [
                 'id' => $si->company->id,
                 'name' => $si->company->name,
@@ -243,6 +258,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 'fantasy_name' => $si->company->fantasy_name,
                 'cuit' => $si->company->afip_number,
                 'afipInscription' => $si->company->afipInscription->name,
+                'afipInscription_id' => $si->company->afipInscription->id,
                 'afipDocument' => $si->company->afipDocument->name,
                 'activity_init' => $si->company->activity_init,
                 'iibb' => $si->company->iibb_conv,
@@ -253,7 +269,8 @@ class SaleInvoiceTransformer extends TransformerAbstract
                     'state' => AfipState::where('afip_code', $si->company->address->state_id)->get()->first()->name
                 ], */
                 'address' => $this->address($si->company),
-                'urlLogo' => $si->company->getMedia('logos')->first()->getFullUrl(),
+                //'urlLogo' => $si->company->getMedia('logos')->first()->getFullUrl(),
+                'urlLogo' => $url_logo,
             ],
 
             'customer' => [
@@ -279,20 +296,20 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 'concepto' => $this->concepto($afip_data),
                 'fch_serv_desde' => $si->fch_serv_desde,
                 'fch_serv_hasta' => $si->fch_serv_hasta,
-                'fch_vto_pago' => $si->fch_vto_pago,
+                'fch_vto_pago' => Carbon::parse($si->fch_vto_pago)->format('d-m-Y'),
                 'isNotaCredito' => $this->isNotaCredito($afip_data),
                 'isNotaDebito' => $this->isNotaDebito($afip_data),
                 'name' => $si->voucher->name,
                 'parents' => $this->parents($si), //cuando una nota de credito pertenece a una factura
                 'payment_type_id' => ($si->paymentType()->exists()) ? $si->paymentType->id : null,
-                'payment_type' => ($si->paymentType()->exists()) ? $si->paymentType->name : null,
+                'payment_type' => ($si->paymentType()->exists()) ? strtoupper($si->paymentType->name) : null,
                 'periodoAsoc' => [
                     'FchDesde' => Carbon::parse($si->fch_serv_desde)->format('Ymd'),
                     'FchHasta' => Carbon::parse($si->fch_serv_hasta)->format('Ymd'),
                 ],
                 'pto_vta' => ZeroLeft::print($si->pto_vta, 4),
                 'sale_conditions_id' => $si->saleCondition->id,
-                'sale_conditions' => $si->saleCondition->name,
+                'sale_conditions' => strtoupper($si->saleCondition->name),
                 'status' => $si->status_id,
                 'total' => $this->totalInvoice($si),
                 'typeNotaCredito' => $this->typeNotaCredito($afip_data),

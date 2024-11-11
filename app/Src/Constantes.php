@@ -2,6 +2,8 @@
 
 namespace App\Src;
 
+use Cotein\ApiAfip\Afip\WS\WSFECRED;
+
 class Constantes
 {
     const CIENXCIEN = 100;
@@ -46,7 +48,10 @@ class Constantes
     ## CONDICION DE VENTA ##
     const CONTADO = 1;
 
-    const IS_NOTA_CREDITO = [3, 8, 13, 20, 51, 94, 97, 100];
+    const IS_FACTURA_AFIP_CODE = [1, 6, 11, 201, 206, 211]; //son los id, pueden coincidir con los códigos de afip
+    const IS_NOTA_CREDITO_AFIP_CODE = [3, 8, 13, 203, 208, 213]; //son los id, pueden coincidir con los códigos de afip
+
+    const IS_NOTA_CREDITO = [3, 8, 13, 20, 51, 94, 97, 100]; //son los id, pueden coincidir con los códigos de afip
 
     ## INSCRIPCION EN AFIP ##
     const INSCRIPCION_RESPONSABLE_INSCRIPTO = 1;
@@ -63,4 +68,16 @@ class Constantes
     const TESTING_ENVIRONMENT = 'TESTING';
 
     const DIEGO_BARRUETA_CUIT = 20227339730;
+
+    const WSFECRED = [
+        'FCA' => 201,
+        'NDA' => 202,
+        'NCA' => 203,
+        'FCB' => 206,
+        'NDB' => 207,
+        'NCB' => 208,
+        'FCC' => 211,
+        'NDC' => 212,
+        'NCC' => 213,
+    ];
 }

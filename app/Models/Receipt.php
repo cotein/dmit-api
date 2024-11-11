@@ -21,7 +21,7 @@ class Receipt extends Model
         return $this->hasOne(Customer::class,  'id', 'customer_id');
     }
 
-    public function payments(): HasMany
+    public function documents_cancelation(): HasMany
     {
         return $this->hasMany(ReceiptPayment::class);
     }
@@ -34,6 +34,18 @@ class Receipt extends Model
     public function company(): HasOne
     {
         return $this->hasOne(Company::class, 'id', 'company_id');
+    }
+
+    public function saleInvoices()
+    {
+        return $this->belongsToMany(SaleInvoices::class, 'receipt_sale_invoices')
+            ->withPivot(
+                'percentage_payment',
+                'import_payment',
+                'percentage_paid_history',
+                'import_paid_history'
+            )
+            ->withTimestamps();
     }
 
     protected static function boot()

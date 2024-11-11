@@ -16,6 +16,8 @@ class WSFacturaElectronica
 {
     protected $wsfe;
 
+    protected $wsFeCred;
+
     public function __construct()
     {
 
@@ -26,11 +28,14 @@ class WSFacturaElectronica
         }
 
         $this->wsfe = AfipWebService::findWebService('factura', $environment, request()->company_cuit,  request()->company_id,  request()->user_id);
+
+        $this->wsFeCred = AfipWebService::findWebService('WSFECRED', 'testing', request()->company_cuit,  request()->company_id,  request()->user_id);
     }
-    public function FECompUltimoAutorizado(Request $request)
+
+    public function FECompUltimoAutorizado($CbteTipo, $PtoVta)
     {
         try {
-            $result =  $this->wsfe->FECompUltimoAutorizado($request->CbteTipo, $request->PtoVta);
+            $result =  $this->wsfe->FECompUltimoAutorizado($CbteTipo, $PtoVta);
 
             $errors = AfipHelper::getErrValues($result);
 
@@ -42,14 +47,12 @@ class WSFacturaElectronica
         } catch (FECompUltimoAutorizadoException $e) {
             activity(Constantes::ERROR_WSFE_ULTIMO_AUTORIZADO)
                 ->causedBy(auth('api')->user())
-                ->withProperties($request->all())
                 ->log($e->getMessage());
 
             throw $e;
         } catch (\Exception $e) {
             activity(Constantes::ERROR_WSFE_ULTIMO_AUTORIZADO)
                 ->causedBy(auth('api')->user())
-                ->withProperties($request->all())
                 ->log($e->getMessage());
 
             throw $e;
@@ -85,10 +88,10 @@ class WSFacturaElectronica
         }
     }
 
-    public function FECAESolicitar(Request $request)
+    public function FECAESolicitar(array $FECAESolicitarArray)
     {
         try {
-            $result =  $this->wsfe->FECAESolicitar($request->FeCabReq, $request->FECAEDetRequest);
+            $result =  $this->wsfe->FECAESolicitar($FECAESolicitarArray['FeCabReq'], $FECAESolicitarArray['FECAEDetRequest']);
 
             $errors = AfipHelper::getErrValues($result);
 
@@ -103,14 +106,66 @@ class WSFacturaElectronica
         } catch (FEParamGetPtosVentaException $e) {
             activity(Constantes::ERROR_WSFE_PTO_VENTA)
                 ->causedBy(auth('api')->user())
-                ->withProperties($request->all())
+                ->withProperties($FECAESolicitarArray)
                 ->log($e->getMessage());
 
             throw $e;
         } catch (\Exception $e) {
             activity(Constantes::ERROR_WSFE_ULTIMO_AUTORIZADO)
                 ->causedBy(auth('api')->user())
-                ->withProperties($request->all())
+                ->withProperties($FECAESolicitarArray)
+                ->log($e->getMessage());
+
+            throw $e;
+        }
+    }
+
+    public function consultarMontoObligadoRecepcion($cuitConsultada, $fechaEmision)
+    {
+        try {
+            $result =  $this->wsFeCred->consultarMontoObligadoRecepcion($cuitConsultada, $fechaEmision);
+
+            $errors = AfipHelper::getErrValues($result);
+
+            if ($errors) {
+                activity('consultarMontoObligadoRecepcion')
+                    ->causedBy(auth('api')->user())
+                    ->withProperties(json_decode(json_encode($result), true));
+                throw new Exception($errors[0]['Msg'], $errors[0]['Code']);
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            activity('consultarMontoObligadoRecepcion')
+                ->causedBy(auth('api')->user())
+                ->withProperties([
+                    'cuitConsultada' => $cuitConsultada,
+                    'fechaEmision' => $fechaEmision
+                ])
+                ->log($e->getMessage());
+
+            throw $e;
+        }
+    }
+
+    public function FEParamGetTiposTributos()
+    {
+        try {
+            $result =  $this->wsfe->FEParamGetTiposTributos();
+
+            $errors = AfipHelper::getErrValues($result);
+
+            if ($errors) {
+                activity('FEParamGetTiposTributos')
+                    ->causedBy(auth('api')->user())
+                    ->withProperties(json_decode(json_encode($result), true));
+                throw new Exception($errors[0]['Msg'], $errors[0]['Code']);
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            activity('FEParamGetTiposTributos')
+                ->causedBy(auth('api')->user())
                 ->log($e->getMessage());
 
             throw $e;

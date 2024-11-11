@@ -32,7 +32,6 @@ class AddMovementToGeneralJournal
     public function handle($event): void
     {
         $invoice = $event->invoiceData;
-        Log::alert($invoice);
         $uuid = Str::uuid()->toString();
         $date = Carbon::now();
 

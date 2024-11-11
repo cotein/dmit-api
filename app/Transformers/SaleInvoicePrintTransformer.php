@@ -55,7 +55,7 @@ class SaleInvoicePrintTransformer extends TransformerAbstract
             ZeroLeft::print($si->pto_vta, 4) . ' - ' . ZeroLeft::print($si->cbte_desde, 8),
             $si->items->sum('neto_import'),
             $si->items->sum('iva_import'),
-            $si->items->sum('total'),
+            $si->items->sum('total') + $si->items->sum('percep_iibb_import') + $si->items->sum('percep_iva_import'),
             $si->cae,
             Carbon::parse($si->cae_fch_vto)->format('d-m-Y'),
             $si->saleCondition->name,

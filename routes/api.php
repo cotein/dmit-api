@@ -2,12 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\ArbaController;
+use App\Http\Controllers\Api\BankController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\Api\AfipIvaController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\VoucherController;
+use App\Http\Controllers\Api\ReceiptController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\AfipStateController;
@@ -26,10 +28,19 @@ Route::post('register/check-cuit', [RegisterController::class, 'checkCuit']);
 Route::post('login', [AuthController::class, 'login']);
 Route::get('email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify'); // Make sure to keep this as your route name
 Route::post('email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
+/* Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+    $request->fulfill();
+
+    return response()->json(['message' => 'Email verified successfully.']);
+})->middleware(['signed'])->name('verification.verify'); */
 
 Route::middleware(['auth:api'])->group(function () {
 
     Route::prefix('api')->group(function () {
+
+        Route::prefix('arba')->group(function () {
+            Route::post('/alicuota_por_sujeto', [ArbaController::class, 'alicuota_por_sujeto']);
+        });
 
         Route::prefix('afip')->group(function () {
             Route::get('/inscriptions', [AfipInscriptionController::class, 'index']);
@@ -56,6 +67,8 @@ Route::middleware(['auth:api'])->group(function () {
             'sale-condition' => SaleConditionController::class,
             'users' => UserController::class,
             'voucher' => AfipVoucherController::class,
+            'bank' => BankController::class,
+            'receipt' => ReceiptController::class,
         ]);
     });
 });

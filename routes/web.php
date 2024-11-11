@@ -1,11 +1,18 @@
 <?php
 
+use App\Models\User;
+use App\Models\SaleInvoices;
+use App\Mail\ConfirmEmailMail;
+use App\Models\Company;
+use App\Models\Receipt;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 
 Route::get('/', function () {
-    $c = AfipWebService::findWebService('WSFECRED', 'testing', 20227339730, 1, 1);
-    dd($c->consultarMontoObligadoRecepcion(30546689979, '2024-07-14'));
-    dd($c->Dummy());
+
+    $c = Company::find(3);
+    dd($c->cbus->first()->deposits->first()->total);
     return 'funciona';
 });
