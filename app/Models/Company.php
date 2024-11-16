@@ -40,6 +40,11 @@ class Company extends Model implements Auditable, HasMedia
         return $this->hasOne(AfipDocument::class, 'id', 'afip_document_id');
     }
 
+    /* public function invoice_comments(): HasMany
+    {
+        return $this->hasMany(SaleInvoicesComments::class, 'company_id', 'id');
+    } */
+
     public function afip_vouchers(): HasMany
     {
         return $this->hasMany(AfipVoucher::class, 'inscription_id', 'afip_inscription_id');
@@ -64,6 +69,7 @@ class Company extends Model implements Auditable, HasMedia
     {
         return $this->hasMany(Cbu::class, 'company_id', 'id');
     }
+
 
     public function getNextReceiptNumber()
     {

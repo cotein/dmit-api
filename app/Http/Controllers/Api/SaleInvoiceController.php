@@ -6,9 +6,11 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Transformers\SaleInvoiceTransformer;
 use App\Src\Repositories\SaleInvoiceRepository;
+use App\Transformers\SaleInvoiceCommentsTransformer;
 use App\Transformers\SaleInvoicePrintTransformer;
 use App\Transformers\SaleInvoiceReceiptTransformer;
 use App\Transformers\SaleInvoiceWithPreviousPayments;
+use Illuminate\Support\Facades\Log;
 
 class SaleInvoiceController extends Controller
 {
@@ -32,13 +34,6 @@ class SaleInvoiceController extends Controller
             return response()->json($invoices, 200);
         }
 
-        if (!$request->has('print')) {
-
-            $invoices = fractal($invoices, new SaleInvoiceTransformer())->toArray()['data'];
-
-            return response()->json($invoices, 200);
-        }
-
         if ($request->has('print') && $request->get('print') === 'yes') {
 
             $invoices = fractal($invoices, new SaleInvoicePrintTransformer())->toArray()['data'];
@@ -49,6 +44,33 @@ class SaleInvoiceController extends Controller
         if ($request->has('invoice_id')) {
 
             $invoices = fractal($invoices, new SaleInvoiceWithPreviousPayments())->toArray()['data'];
+
+            return response()->json($invoices, 200);
+        }
+
+        if ($request->has('comments')) {
+
+            $data = fractal($invoices, new SaleInvoiceCommentsTransformer())->toArray()['data'];
+
+            $pagination = [
+                'total' => $invoices->total(),
+                'per_page' => $invoices->perPage(),
+                'current_page' => $invoices->currentPage(),
+                'last_page' => $invoices->lastPage(),
+                'from' => $invoices->firstItem(),
+                'to' => $invoices->lastItem()
+            ];
+
+            $response = [
+                'pagination' => $pagination,
+                'data' => $data
+            ];
+
+            return response()->json($response, 200);
+        }
+
+        if (!$request->has('print')) {
+            $invoices = fractal($invoices, new SaleInvoiceTransformer())->toArray()['data'];
 
             return response()->json($invoices, 200);
         }

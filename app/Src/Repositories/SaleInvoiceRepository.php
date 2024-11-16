@@ -71,6 +71,10 @@ class SaleInvoiceRepository
             return $query->paginate($request->per_page);
         }
 
+        if ($request->has('comments')) {
+            return $query->whereHas('comments')->paginate($request->per_page);
+        }
+
         // Devolver todos los resultados para impresión
         return $query->get();
     }

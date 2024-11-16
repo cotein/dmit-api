@@ -13,6 +13,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
 
     $c = Company::find(3);
-    dd($c->cbus->first()->deposits->first()->total);
+    dd($c->invoice_comments);
     return 'funciona';
 });
