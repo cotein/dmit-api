@@ -29,7 +29,7 @@ class WSFacturaElectronica
 
         $this->wsfe = AfipWebService::findWebService('factura', $environment, request()->company_cuit,  request()->company_id,  request()->user_id);
 
-        $this->wsFeCred = AfipWebService::findWebService('WSFECRED', 'testing', request()->company_cuit,  request()->company_id,  request()->user_id);
+        $this->wsFeCred = AfipWebService::findWebService('WSFECRED', 'production', request()->company_cuit,  request()->company_id,  request()->user_id);
     }
 
     public function FECompUltimoAutorizado($CbteTipo, $PtoVta)
