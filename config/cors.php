@@ -15,9 +15,9 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('CORS_ALLOW_ORIGIN'), 'http://localhost:5173', 'http://localhost:8888'],
+    'allowed_origins' => [env('CORS_ALLOW_ORIGIN'), 'http://localhost:5173', 'http://localhost:8888', 'https://www.facturador.dmit.ar', 'https://www.dmit.ar', 'https://emailsender.dmit.ar'],
 
-    'allowed_origins_patterns' => ['/^https?:\/\/(.+\.)?dmit\.ar$/', '/^http:\/\/localhost:5173$/', '/^https:\/\/www\.dmit\.ar$/', '/^http:\/\/localhost:8888$/'],
+    'allowed_origins_patterns' => ['/^https?:\/\/(.+\.)?dmit\.ar$/', '/^http:\/\/localhost:5173$/', '/^https:\/\/www\.dmit\.ar$/', '/^http:\/\/localhost:8888$/', '/^https:\/\/www\.facturador\.dmit\.ar$/', '/^https:\/\/.emailsender\.dmit\.ar$/'],
 
     'allowed_headers' => ['*'],
 
