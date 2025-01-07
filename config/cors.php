@@ -7,6 +7,7 @@ return [
         '/login',
         '/logout',
         '/register',
+        '/auth/google',
         'oauth/*',
         'email/verify/*',
         'email/resend',

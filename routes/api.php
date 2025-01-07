@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\AfipFacturaElectronicaController;
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('register/check-cuit', [RegisterController::class, 'checkCuit']);
 Route::post('login', [AuthController::class, 'login']);
+Route::post('auth/google', [AuthController::class, 'googleLogin']);
 Route::get('email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify'); // Make sure to keep this as your route name
 Route::post('email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
 /* Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
@@ -33,7 +34,6 @@ Route::post('email/resend', [EmailVerificationController::class, 'resend'])->nam
 
     return response()->json(['message' => 'Email verified successfully.']);
 })->middleware(['signed'])->name('verification.verify'); */
-
 Route::middleware(['auth:api'])->group(function () {
 
     Route::prefix('api')->group(function () {
