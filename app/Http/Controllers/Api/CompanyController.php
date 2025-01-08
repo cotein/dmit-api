@@ -36,10 +36,10 @@ class CompanyController extends Controller
     public function store(Request $request)
     {
         try {
-
+            Log::info('Creando compañía ' . auth()->user()->id);
             $company = $this->companyRepository->store($request);
 
-            $company->users()->sync(auth('api')->user()->id);
+            $company->users()->sync(auth()->user()->id);
 
             $companies = $this->setMyCompanies(auth()->user());
 
@@ -49,7 +49,7 @@ class CompanyController extends Controller
         } catch (\Exception $e) {
 
             activity(Constantes::ERROR_AL_CREAR_COMPAÑIA)
-                ->causedBy(auth('api')->user())
+                ->causedBy(auth()->user())
                 ->withProperties($request->all())
                 ->log($e->getMessage());
 

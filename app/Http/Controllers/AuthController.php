@@ -61,7 +61,6 @@ class AuthController extends Controller
     private function generateTokenForUser($user)
     {
         Auth::login($user);
-
         if (is_null($user->google_id)) {
             $user->google_id = request()->sub;
             $user->save();

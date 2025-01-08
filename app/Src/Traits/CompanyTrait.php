@@ -64,7 +64,9 @@ trait CompanyTrait
 
     private function setCbus($company): array
     {
-        if ($company->cbus) {
+        if ($company->cbus && $company->cbus->every(function ($cbu) {
+            return isset($cbu->id, $cbu->bank->id, $cbu->cbu);
+        })) {
             return $company->cbus->transform(function ($cbu, int $key) {
                 return [
                     'id' => $cbu->id,
