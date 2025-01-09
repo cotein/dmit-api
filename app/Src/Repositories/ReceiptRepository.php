@@ -61,6 +61,11 @@ class ReceiptRepository
 
     public function store(SaleInvoices $si): void
     {
+        // Verificar si sales_condition_id es Constantes::CONTADO
+        if ((int) $si->sales_condition_id !== Constantes::CONTADO) {
+            return;
+        }
+
         DB::transaction(function () use ($si) {
             try {
                 $receipt = new Receipt;
