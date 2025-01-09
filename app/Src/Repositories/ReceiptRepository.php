@@ -160,7 +160,7 @@ class ReceiptRepository
                     $receipt_payment->receipt_id = $receipt->id;
                     $receipt_payment->payment_type_id = $document['payment_type_id'];
                     $receipt_payment->number = $document['number'];
-                    $receipt_payment->cbu_id = $document['cbu_id'];
+                    $receipt_payment->cbu_id = (is_null($document['cbu_id'])) ? 0 : $document['cbu_id'];
                     $receipt_payment->date = new Date($document['imputation_date']);
                     $receipt_payment->description = $document['comments'];
                     $receipt_payment->total = $document['import'];
