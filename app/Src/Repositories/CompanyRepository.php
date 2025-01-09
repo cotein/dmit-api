@@ -27,6 +27,7 @@ class CompanyRepository
 
     private function saveCompany(array $data, Company $company = null): Company
     {
+
         DB::beginTransaction();
 
         try {
@@ -51,16 +52,25 @@ class CompanyRepository
 
             $company->afip_document_id = Constantes::CUIT_ID;
 
-            if (isset($data['perception_iibb']) && !is_null($data['perception_iibb'])) {
+            /* if (isset($data['perception_iibb']) && !is_null($data['perception_iibb'])) {
+                $company->percep_iibb = $data['perception_iibb'];
+            } */
+            if (array_key_exists('perception_iibb', $data)) {
+                //throw new \Exception("Error Processing Request " . $data['perception_iibb'], $data['perception_iibb']);
+
                 $company->percep_iibb = $data['perception_iibb'];
             }
+            if (array_key_exists('perception_iva', $data)) {
+                //throw new \Exception("Error Processing Request " . $data['perception_iva'], $data['perception_iva']);
 
-            if (isset($data['perception_iva']) && !is_null($data['perception_iva'])) {
-                $company->percep_iibb = $data['perception_iva'];
+                $company->percep_iva = $data['perception_iva'];
             }
+            /* if (isset($data['perception_iva']) && !is_null($data['perception_iva'])) {
+                $company->percep_iibb = $data['perception_iva'];
+            } */
 
             $company->iibb_conv = $data['iibb'];
-            $company->percep_iva = $data['perception_iva'];
+            //$company->percep_iva = $data['perception_iva'];
             $company->pto_vta_fe = (int) $data['pto_vta_fe'];
             $company->pto_vta_remito = (int) $data['pto_vta_remito'];
             $company->pto_vta_recibo = (int) $data['pto_vta_recibo'];
@@ -117,6 +127,9 @@ class CompanyRepository
             }
 
             DB::commit();
+
+            // Recargar la compañía para asegurarse de que todos los datos estén actualizados
+            $company->refresh();
 
             return $company;
         } catch (\Exception $e) {

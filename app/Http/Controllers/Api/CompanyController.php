@@ -70,14 +70,14 @@ class CompanyController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        try {
+        //try {
 
-            $company = $this->companyRepository->update($request, $id);
+        $company = $this->companyRepository->update($request, $id);
 
-            $companies = $this->setMyCompanies(auth()->user());
+        $companies = $this->setMyCompanies(auth()->user());
 
-            return response()->json($companies, 200);
-        } catch (\Exception $e) {
+        return response()->json($companies, 200);
+        /* } catch (\Exception $e) {
 
             activity(Constantes::ERROR_AL_CREAR_COMPAÑIA)
                 ->causedBy(auth('api')->user())
@@ -85,7 +85,7 @@ class CompanyController extends Controller
                 ->log($e->getMessage());
 
             throw new Exception($e->getMessage(), $e->getCode());
-        }
+        } */
     }
 
     /**
