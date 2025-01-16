@@ -20,7 +20,7 @@
         "laraveles/spanish": "^1.5",
         "lcobucci/jwt": "^4.0",
         "mailersend/laravel-driver": "^2.6",
-        "nesbot/carbon": "2.54.0",
+        "nesbot/carbon": "2.72",
         "orangehill/iseed": "^3.0",
         "owen-it/laravel-auditing": "^13.5",
         "predis/predis": "^2.3",
