@@ -31,19 +31,24 @@ class SaleInvoiceRepository
         $this->customer_cuenta_corriente_repository = $customer_cuenta_corriente_repository;
     }
 
-    private function getTotalIncomeForMonth(int $month = null, int $year = null): float
+    private function getTotalIncomeForMonth(int $month = null, int $year = null, int $companyId = null): float
     {
 
         $month = $month ?? now()->month;
         $year = $year ?? now()->year;
 
-        return SaleInvoices::whereMonth('cbte_fch', $month)
-            ->whereYear('cbte_fch', $year)
-            ->with(['items' => function ($query) {
-                $query->selectRaw('sale_invoice_id, SUM(total) as total_amount')
-                    ->whereIn('voucher_id', $this->voucherIdsToSum)
-                    ->groupBy('sale_invoice_id');
-            }])
+        $query = SaleInvoices::whereMonth('cbte_fch', $month)
+            ->whereYear('cbte_fch', $year);
+
+        if (!is_null($companyId)) {
+            $query->where('company_id', $companyId);
+        }
+
+        return $query->with(['items' => function ($query) {
+            $query->selectRaw('sale_invoice_id, SUM(total) as total_amount')
+                ->whereIn('voucher_id', $this->voucherIdsToSum)
+                ->groupBy('sale_invoice_id');
+        }])
             ->get()
             ->sum(function ($invoice) {
                 return $invoice->items->first()->total_amount ?? 0;
@@ -51,7 +56,7 @@ class SaleInvoiceRepository
     }
 
 
-    private function getDailySalesReport(): array
+    public function getDailySalesReport(int $companyId = null): array
     {
         $currentMonth = now()->month;
         $currentYear = now()->year;
@@ -64,6 +69,9 @@ class SaleInvoiceRepository
             $dailySales->push([
                 'date' => $date->format('d-m-Y'),
                 'sales' => SaleInvoices::whereDate('cbte_fch', $date)
+                    ->when($companyId, function ($query) use ($companyId) {
+                        return $query->where('company_id', $companyId);
+                    })
                     ->with(['items' => function ($query) {
                         $query->selectRaw('sale_invoice_id, SUM(total) as total_amount')
                             ->whereIn('voucher_id', $this->voucherIdsToSum)
@@ -85,7 +93,7 @@ class SaleInvoiceRepository
 
         // Calcular ingresos del mes anterior
         $previousMonth = now()->subMonth();
-        $previousMonthSales = $this->getTotalIncomeForMonth($previousMonth->month, $previousMonth->year);
+        $previousMonthSales = $this->getTotalIncomeForMonth($previousMonth->month, $previousMonth->year, $companyId);
 
         $growthRate = $previousMonthSales > 0 ? (($totalSales - $previousMonthSales) / $previousMonthSales) * 100 : 0;
         $growthStatus = $growthRate > 0 ? 'up' : ($growthRate < 0 ? 'down' : 'stable');
@@ -135,11 +143,11 @@ class SaleInvoiceRepository
 
         if ($request->has('getLastMonthInvoiced')) {
 
-            $totalIncomeThisMonth = $this->getTotalIncomeForMonth(now()->month, now()->year);
+            $totalIncomeThisMonth = $this->getTotalIncomeForMonth(now()->month, now()->year, $request->company_id);
 
             $previousMonth = now()->subMonth();
 
-            $totalIncomeLastMonth = $this->getTotalIncomeForMonth($previousMonth->month, $previousMonth->year);
+            $totalIncomeLastMonth = $this->getTotalIncomeForMonth($previousMonth->month, $previousMonth->year, $request->company_id);
 
             return [
                 'totalIncomeThisMonth' => $totalIncomeThisMonth,
@@ -149,7 +157,7 @@ class SaleInvoiceRepository
 
         if ($request->has('getDailySalesReport')) {
 
-            return  $this->getDailySalesReport();
+            return  $this->getDailySalesReport($request->company_id);
         }
 
         // Aplicar filtros opcionales
