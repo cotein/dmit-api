@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Src\Constantes;
 use Illuminate\Http\Request;
 use App\Events\CreatedInvoice;
+use App\Events\TestEvent;
 use App\Src\Helpers\ActivityLog;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;

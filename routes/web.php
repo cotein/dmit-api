@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
 
     $c = Company::find(3);
-    dd($c->invoice_comments);
+    $totalIncomeThisMonth = SaleInvoices::whereMonth('created_at', now()->month)
+        ->whereYear('created_at', now()->year)
+        ->sum('amount');
+    dd($totalIncomeThisMonth);
     return 'funciona';
 });

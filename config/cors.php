@@ -12,6 +12,7 @@ return [
         'email/verify/*',
         'email/resend',
         'storage/companies/*',
+        'updates'
     ],
 
     'allowed_methods' => ['*'],

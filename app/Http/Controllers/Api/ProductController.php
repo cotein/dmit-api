@@ -23,6 +23,11 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
+        if ($request->has('dashboard')) {
+            $totalProducts = $this->productRepository->find($request);
+            return response()->json($totalProducts, 200);
+        }
+
         $products = $this->productRepository->find($request);
 
         $products = fractal($products, new ProductTransformer())->toArray()['data'];

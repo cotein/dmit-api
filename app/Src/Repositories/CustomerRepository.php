@@ -17,6 +17,10 @@ class CustomerRepository
 
         $customers = $customers->where('company_id', (int) $request->company_id);
 
+        if ($request->has('dashboard')) {
+            return $customers->count();
+        }
+
         if ($customers->count() === 0) {
             return null;
         }

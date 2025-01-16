@@ -22,7 +22,9 @@ use App\Http\Controllers\Api\SaleConditionController;
 use App\Http\Controllers\Api\AfipInscriptionController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\AfipFacturaElectronicaController;
+use App\Http\Controllers\Api\DashBoardController;
 
+Route::get('updates', [DashBoardController::class, 'updates']);
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('register/check-cuit', [RegisterController::class, 'checkCuit']);
 Route::post('login', [AuthController::class, 'login']);

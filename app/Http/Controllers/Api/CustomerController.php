@@ -29,6 +29,11 @@ class CustomerController extends Controller
     public function index(Request $request)
     {
 
+        if ($request->has('dashboard')) {
+            $totalCustomers = $this->customerRepository->find($request);
+            return response()->json($totalCustomers, 200);
+        }
+
         if ($request->has('is_customer_cuenta_corriente')) {
             $cc = $this->customerCuentaCorrienteRepository->find($request);
             $ccc = fractal($cc, new CustomerCuentaCorrienteTransformer())->toArray()['data'];

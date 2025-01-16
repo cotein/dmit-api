@@ -17,10 +17,15 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 class ProductRepository
 {
 
-    public function find(Request $request): Collection
+    public function find(Request $request)
     {
         $products = Product::query();
+
         $products = $products->where('company_id', $request->company_id);
+
+        if ($request->has('dashboard')) {
+            return $products->count();
+        }
 
         if ($request->has('name')) {
             $products = $products->where('name', 'like', "%{$request->name}%");

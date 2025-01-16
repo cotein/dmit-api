@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\SaleInvoices;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Transformers\SaleInvoiceTransformer;
 use App\Src\Repositories\SaleInvoiceRepository;
-use App\Transformers\SaleInvoiceCommentsTransformer;
 use App\Transformers\SaleInvoicePrintTransformer;
+use App\Transformers\SaleInvoiceLastMonthInvoiced;
 use App\Transformers\SaleInvoiceReceiptTransformer;
+use App\Transformers\SaleInvoiceCommentsTransformer;
 use App\Transformers\SaleInvoiceWithPreviousPayments;
-use Illuminate\Support\Facades\Log;
 
 class SaleInvoiceController extends Controller
 {
@@ -26,6 +28,16 @@ class SaleInvoiceController extends Controller
     public function index(Request $request)
     {
         $invoices = $this->saleInvoiceRepository->find($request);
+
+        if ($request->has('getLastMonthInvoiced')) {
+
+            return response()->json($invoices, 200);
+        }
+
+        if ($request->has('getDailySalesReport')) {
+
+            return response()->json($invoices, 200);
+        }
 
         if ($request->has('getPaymentOnReceipt')) {
 

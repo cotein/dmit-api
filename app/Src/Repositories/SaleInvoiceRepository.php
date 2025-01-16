@@ -23,9 +23,82 @@ class SaleInvoiceRepository
 {
     protected $customer_cuenta_corriente_repository;
 
+    private $voucherIdsToSum = [1, 2, 6, 7, 11, 12, 201, 202, 206, 207, 211, 212];
+
+
     public function __construct(CustomerCuentaCorrienteRepository $customer_cuenta_corriente_repository)
     {
         $this->customer_cuenta_corriente_repository = $customer_cuenta_corriente_repository;
+    }
+
+    private function getTotalIncomeForMonth(int $month = null, int $year = null): float
+    {
+
+        $month = $month ?? now()->month;
+        $year = $year ?? now()->year;
+
+        return SaleInvoices::whereMonth('cbte_fch', $month)
+            ->whereYear('cbte_fch', $year)
+            ->with(['items' => function ($query) {
+                $query->selectRaw('sale_invoice_id, SUM(total) as total_amount')
+                    ->whereIn('voucher_id', $this->voucherIdsToSum)
+                    ->groupBy('sale_invoice_id');
+            }])
+            ->get()
+            ->sum(function ($invoice) {
+                return $invoice->items->first()->total_amount ?? 0;
+            });
+    }
+
+
+    private function getDailySalesReport(): array
+    {
+        $currentMonth = now()->month;
+        $currentYear = now()->year;
+
+        $dailySales = collect([]);
+
+        for ($day = 1; $day <= now()->daysInMonth; $day++) {
+            $date = Carbon::create($currentYear, $currentMonth, $day);
+
+            $dailySales->push([
+                'date' => $date->format('d-m-Y'),
+                'sales' => SaleInvoices::whereDate('cbte_fch', $date)
+                    ->with(['items' => function ($query) {
+                        $query->selectRaw('sale_invoice_id, SUM(total) as total_amount')
+                            ->whereIn('voucher_id', $this->voucherIdsToSum)
+                            ->groupBy('sale_invoice_id');
+                    }])
+                    ->get()
+                    ->sum(function ($invoice) {
+                        return $invoice->items->first()->total_amount ?? 0;
+                    }),
+                //'orders' => SaleInvoices::whereDate('cbte_fch', $date)->count(),
+            ]);
+        }
+
+        $labels = $dailySales->pluck('date')->toArray();
+        $sales = $dailySales->pluck('sales')->toArray();
+        //$orders = $dailySales->pluck('orders')->toArray();
+
+        $totalSales = array_sum($sales);
+
+        // Calcular ingresos del mes anterior
+        $previousMonth = now()->subMonth();
+        $previousMonthSales = $this->getTotalIncomeForMonth($previousMonth->month, $previousMonth->year);
+
+        $growthRate = $previousMonthSales > 0 ? (($totalSales - $previousMonthSales) / $previousMonthSales) * 100 : 0;
+        $growthStatus = $growthRate > 0 ? 'up' : ($growthRate < 0 ? 'down' : 'stable');
+
+        return [
+            'title' => 'Ventas diarias - ' . now()->locale('es')->monthName . ' ' . now()->year,
+            'labels' => $labels,
+            //'orders' => $orders,
+            'sales' => $sales,
+            'total' => number_format($totalSales, 2),
+            'growthRate' => number_format($growthRate, 2),
+            'growthStatus' => $growthStatus,
+        ];
     }
 
     private function applyOptionalFilters($query, Request $request): void
@@ -59,6 +132,25 @@ class SaleInvoiceRepository
 
         // Filtrar por compañía
         $query->where('company_id', $request->company_id);
+
+        if ($request->has('getLastMonthInvoiced')) {
+
+            $totalIncomeThisMonth = $this->getTotalIncomeForMonth(now()->month, now()->year);
+
+            $previousMonth = now()->subMonth();
+
+            $totalIncomeLastMonth = $this->getTotalIncomeForMonth($previousMonth->month, $previousMonth->year);
+
+            return [
+                'totalIncomeThisMonth' => $totalIncomeThisMonth,
+                'totalIncomeLastMonth' => $totalIncomeLastMonth
+            ];
+        }
+
+        if ($request->has('getDailySalesReport')) {
+
+            return  $this->getDailySalesReport();
+        }
 
         // Aplicar filtros opcionales
         $this->applyOptionalFilters($query, $request);
