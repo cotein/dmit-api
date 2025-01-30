@@ -36,7 +36,7 @@ class CompanyController extends Controller
     public function store(Request $request)
     {
         try {
-            Log::info('Creando compañía ' . auth()->user()->id);
+
             $company = $this->companyRepository->store($request);
 
             $company->users()->sync(auth()->user()->id);

@@ -34,6 +34,8 @@ class Product extends Model implements HasMedia, Auditable
         'see_price_on_the_web',
     ];
 
+
+
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class);

@@ -35,6 +35,13 @@ class CompanyRepository
                 $company = new Company();
             }
 
+            // Check if afip_number is unique
+            $existingCompany = Company::where('afip_number', $data['cuit'])->first();
+
+            if ($existingCompany && (!$company || $existingCompany->id !== $company->id)) {
+                throw new \Exception("La compañía con CUIT {$data['cuit']} ya existe", 400);
+            }
+
             $company->name = strtoupper($data['name']);
             $company->last_name = strtoupper($data['lastName']);
             $company->fantasy_name = strtoupper($data['fantasy_name']);

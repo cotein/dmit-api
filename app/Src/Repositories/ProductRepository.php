@@ -2,16 +2,18 @@
 
 namespace App\Src\Repositories;
 
+use App\Models\AfipIva;
 use Exception;
-use App\Models\CategoryProduct;
-use App\Models\PriceList;
-use App\Models\PriceListProduct;
 use App\Models\Product;
 use App\Src\Constantes;
-use Illuminate\Database\Eloquent\Collection;
+use App\Models\PriceList;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Models\CategoryProduct;
+use App\Models\PriceListProduct;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Collection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ProductRepository
@@ -27,6 +29,10 @@ class ProductRepository
             return $products->count();
         }
 
+        if ($request->has('list')) {
+            return $products->paginate($request->per_page);
+        }
+
         if ($request->has('name')) {
             $products = $products->where('name', 'like', "%{$request->name}%");
         }
@@ -34,18 +40,160 @@ class ProductRepository
         return $products->get();
     }
 
-    /* public function store(Request $request): Product
+    /**
+     * Store a new product.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \App\Models\Product
+     */
+    public function store(Request $request): Product
     {
+        DB::beginTransaction();
+
+        try {
+            // Extract data from the request
+            $prod = $request['product'];
+            $company_id = $request['company_id'];
+            $pics = $request['product']['pictures'];
+            $price_list = $prod['price_list'];
+            $categories = $prod['category'];
+
+            $product = Product::where('company_id', $company_id)
+                ->where(function ($query) use ($prod) {
+                    $query->where('code', strtoupper($prod['code']))
+                        ->orWhere('name', strtoupper($prod['name']));
+                })->first();
+
+            if ($product) {
+                if ($product->code === strtoupper($prod['code'])) {
+                    throw new Exception('Ya se encuentra registrado un producto con este código.');
+                }
+                if ($product->name === strtoupper($prod['name'])) {
+                    throw new Exception('Ya se encuentra registrado un producto con ese nombre.');
+                }
+            } else {
+                $product = new Product();
+            }
+
+            $seePriceOnTheWeb = false;
+
+            if (array_key_exists('see_price_on_the_web', $prod)) {
+                // El parámetro existe en el array
+                $seePriceOnTheWeb = $prod['see_price_on_the_web'];
+            } else {
+                if (array_key_exists('view_price', $prod)) {
+                    // El parámetro existe en el array
+                    $seePriceOnTheWeb = $prod['view_price'];
+                } else {
+                    // El parámetro no existe en el array
+                    $seePriceOnTheWeb = false; // O algún valor por defecto
+                }
+            }
+            // Create a new product
+            $product = Product::create([
+                'company_id' => $company_id,
+                'name' => strtoupper($prod['name']),
+                'code' => strtoupper($prod['code']),
+                'sub_title' => '',
+                'description' => '',
+                'iva_id' => $prod['iva'],
+                'money_id' => Constantes::PESOS,
+                'priority_id' => $prod['priority'],
+                'published_meli' => 0,
+                'published_here' => $prod['published_here'],
+                'slug' => Str::slug($prod['name']),
+                'critical_stock' => $prod['critical_stock'],
+                'apply_discount' => $prod['apply_discount'],
+                'apply_discount_amount' => $prod['apply_discount_amount'],
+                'apply_discount_percentage' => $prod['apply_discount_percentage'],
+                'see_price_on_the_web' => $seePriceOnTheWeb,
+            ]);
+
+            // Create a new stock history for the product
+            $product->stock_history()->create([
+                'product_id' => $product->id,
+                'quantity' => $prod['quantity'],
+                'motive' => Constantes::CREA_PRODUCTO,
+                'company_id' => $company_id,
+                'user_id' => auth()->user()->id
+            ]);
+
+            // Create a new price list product for each price list
+            collect($price_list)->each(function ($pl) use ($prod, $product) {
+                $pList = PriceList::find($pl);
+                PriceListProduct::create([
+                    'pricelist_id' => $pList->id,
+                    'product_id' => $product->id,
+                    'price' => (float) $prod['cost'] + ((float) $prod['cost'] * $pList->profit_percentage / Constantes::CIENXCIEN),
+                    'profit_percentage' => (float) $pList->profit_percentage,
+                    'profit_rate' => ((float) $prod['cost'] * $pList->profit_percentage / Constantes::CIENXCIEN),
+                ]);
+            });
+
+            // Create a new category product for each category
+            collect($categories)->flatten()->each(function ($category) use ($product) {
+                CategoryProduct::create([
+                    'category_id' => $category,
+                    'product_id' => $product->id,
+                ]);
+            });
+
+            // Add each picture to the product's media collection
+            collect($pics)->each(function ($photo) use ($product) {
+                $base64File = $photo['thumbUrl'];
+
+                $fileData = base64_decode($base64File);
+
+                $tempFilePath = tempnam(sys_get_temp_dir(), 'base64file');
+
+                file_put_contents($tempFilePath, $fileData);
+
+                $product->addMedia($tempFilePath)->toMediaCollection('products');
+            });
+            DB::commit();
+            // Return the newly created product
+            return $product;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear el producto: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al crear el producto'], 500);
+        }
+    }
+
+    public function update(Request $request): Product
+    {
+        DB::beginTransaction();
+
+        // try {
+        // Extract data from the request
         $prod = $request['product'];
         $company_id = $request['company_id'];
-        $pics = $request['product']['pictures'];
+        $pics = array_key_exists('pictures', $request['product']) ? $request['product']['pictures'] : [];
         $price_list = $prod['price_list'];
         $categories = $prod['category'];
-        $product = new Product();
 
-        $product->company_id = $company_id;
+        $product = Product::find($prod['id']);
+
+        if (!$product) {
+            throw new Exception('El producto no se encuentra en la base de datos.');
+        }
+
+        $seePriceOnTheWeb = false;
+
+        if (array_key_exists('see_price_on_the_web', $prod)) {
+            // El parámetro existe en el array
+            $seePriceOnTheWeb = $prod['see_price_on_the_web'];
+        } else {
+            if (array_key_exists('view_price', $prod)) {
+                // El parámetro existe en el array
+                $seePriceOnTheWeb = $prod['view_price'];
+            } else {
+                // El parámetro no existe en el array
+                $seePriceOnTheWeb = false; // O algún valor por defecto
+            }
+        }
+
         $product->name = strtoupper($prod['name']);
-        $product->code = strtoupper($prod['code']);
         $product->sub_title = '';
         $product->description = '';
         $product->iva_id = $prod['iva'];
@@ -58,144 +206,81 @@ class ProductRepository
         $product->apply_discount = $prod['apply_discount'];
         $product->apply_discount_amount = $prod['apply_discount_amount'];
         $product->apply_discount_percentage = $prod['apply_discount_percentage'];
-        $product->see_price_on_the_web = $prod['view_price'];
+        $product->see_price_on_the_web = $seePriceOnTheWeb;
+
         $product->save();
 
-        $product->stock_history()->create([
-            'product_id' => $product->id,
-            'quantity' => $prod['quantity'],
-            'motive' => Constantes::CREA_PRODUCTO,
-            'company_id' => $company_id,
-            'user_id' => auth()->user()->id
-        ]);
-
-        collect($price_list)->map(function ($pl) use ($company_id, $prod, $product) {
-
-            $pList = PriceList::find($pl);
-
-            $priceListProduct = new PriceListProduct();
-            $priceListProduct->pricelist_id = $pList->id;
-            $priceListProduct->product_id = $product->id;
-            $priceListProduct->price = (float) $prod['cost'] + ((float) $prod['cost'] * $pList->profit_percentage / Constantes::CIENXCIEN);
-            $priceListProduct->profit_percentage = (float) $pList->profit_percentage;
-            $priceListProduct->profit_rate = ((float) $prod['cost'] * $pList->profit_percentage / Constantes::CIENXCIEN);
-            $priceListProduct->save();
-
-            unset($pList);
-            unset($priceListProduct);
-        });
-
-        collect($categories)->map(function ($groupCategory) use ($product) {
-
-            collect($groupCategory)->map(function ($category) use ($product) {
-                $categoryProduct = new CategoryProduct();
-                $categoryProduct->category_id = $category;
-                $categoryProduct->product_id = $product->id;
-                $categoryProduct->save();
-
-                unset($categoryProduct);
-            });
-        });
-
-        collect($pics)->map(function ($photo) use ($product) {
-            $base64File = $photo['thumbUrl'];
-
-            // Decodifica el archivo base64 en un archivo temporal
-            $fileData = base64_decode($base64File);
-            $tempFilePath = tempnam(sys_get_temp_dir(), 'base64file');
-            file_put_contents($tempFilePath, $fileData);
-
-            // Asigna el archivo al modelo Media
-            $product->addMedia($tempFilePath)->toMediaCollection('products');
-        });
-        // Obtén el archivo base64 enviado por el cliente
-
-        return $product;
-    } */
-
-    /**
-     * Store a new product.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \App\Models\Product
-     */
-    public function store(Request $request): Product
-    {
-        // Extract data from the request
-        $prod = $request['product'];
-        $company_id = $request['company_id'];
-        $pics = $request['product']['pictures'];
-        $price_list = $prod['price_list'];
-        $categories = $prod['category'];
-
-        $product = Product::firstOrNew([
-            'code' => strtoupper($prod['code']),
-            'company_id' => $company_id
-        ]);
-
-        if ($product->exists) {
-            throw new Exception('Ya se encuentra registrado un producto con este código.');
+        // Create a new stock history for the product
+        /* $product->stock_history()->update([
+                'product_id' => $product->id,
+                'quantity' => $prod['quantity'],
+                'motive' => 'ACTUALIZA PRODUCTO',
+                'company_id' => $company_id,
+                'user_id' => auth()->user()->id
+            ]); */
+        foreach ($product->stock_history as $stock) {
+            $stock->update([
+                'product_id' => $product->id,
+                'quantity' => $prod['quantity'],
+                'motive' => 'ACTUALIZA PRODUCTO',
+                'company_id' => $company_id,
+                'user_id' => auth()->user()->id,
+            ]);
         }
 
-        // Create a new product
-        $product = Product::create([
-            'company_id' => $company_id,
-            'name' => strtoupper($prod['name']),
-            'code' => strtoupper($prod['code']),
-            'sub_title' => '',
-            'description' => '',
-            'iva_id' => $prod['iva'],
-            'money_id' => Constantes::PESOS,
-            'priority_id' => $prod['priority'],
-            'published_meli' => 0,
-            'published_here' => $prod['published_here'],
-            'slug' => Str::slug($prod['name']),
-            'critical_stock' => $prod['critical_stock'],
-            'apply_discount' => $prod['apply_discount'],
-            'apply_discount_amount' => $prod['apply_discount_amount'],
-            'apply_discount_percentage' => $prod['apply_discount_percentage'],
-            'see_price_on_the_web' => $prod['view_price'],
-        ]);
+        if (collect($price_list)->isNotEmpty()) {
 
-        // Create a new stock history for the product
-        $product->stock_history()->create([
-            'product_id' => $product->id,
-            'quantity' => $prod['quantity'],
-            'motive' => Constantes::CREA_PRODUCTO,
-            'company_id' => $company_id,
-            'user_id' => auth()->user()->id
-        ]);
+            collect($price_list)->each(function ($pl) use ($prod, $product) {
+                $pList = PriceList::find($pl);
 
-        // Create a new price list product for each price list
-        collect($price_list)->each(function ($pl) use ($prod, $product) {
-            $pList = PriceList::find($pl);
-            PriceListProduct::create([
-                'pricelist_id' => $pList->id,
-                'product_id' => $product->id,
-                'price' => (float) $prod['cost'] + ((float) $prod['cost'] * $pList->profit_percentage / Constantes::CIENXCIEN),
-                'profit_percentage' => (float) $pList->profit_percentage,
-                'profit_rate' => ((float) $prod['cost'] * $pList->profit_percentage / Constantes::CIENXCIEN),
-            ]);
-        });
+                $pivotRecord = PriceListProduct::where('product_id', $product->id)
+                    ->where('pricelist_id', $pList->id)
+                    ->first();
 
-        // Create a new category product for each category
-        collect($categories)->flatten()->each(function ($category) use ($product) {
-            CategoryProduct::create([
-                'category_id' => $category,
-                'product_id' => $product->id,
-            ]);
-        });
+                $pivotRecord->update([
+                    'price' => (float) $prod['cost'] + ((float) $prod['cost'] * $pList->profit_percentage / Constantes::CIENXCIEN),
+                    'profit_percentage' => (float) $pList->profit_percentage,
+                    'profit_rate' => ((float) $prod['cost'] * $pList->profit_percentage / Constantes::CIENXCIEN),
+                ]);
+            });
+        }
 
-        // Add each picture to the product's media collection
-        collect($pics)->each(function ($photo) use ($product) {
-            $base64File = $photo['thumbUrl'];
-            $fileData = base64_decode($base64File);
-            $tempFilePath = tempnam(sys_get_temp_dir(), 'base64file');
-            file_put_contents($tempFilePath, $fileData);
-            $product->addMedia($tempFilePath)->toMediaCollection('products');
-        });
+        if (collect($categories)->isNotEmpty()) {
 
+            CategoryProduct::where('product_id', $product->id)->delete();
+
+            // Create a new category product for each category
+            collect($categories)->flatten()->each(function ($category) use ($product) {
+                CategoryProduct::create([
+                    'category_id' => $category,
+                    'product_id' => $product->id,
+                ]);
+            });
+        }
+
+        if (collect($pics)->isNotEmpty()) {
+
+            $product->clearMediaCollection('products');
+            // Add each picture to the product's media collection
+            collect($pics)->each(function ($photo) use ($product) {
+                $base64File = $photo['thumbUrl'];
+
+                $fileData = base64_decode($base64File);
+
+                $tempFilePath = tempnam(sys_get_temp_dir(), 'base64file');
+
+                file_put_contents($tempFilePath, $fileData);
+
+                $product->addMedia($tempFilePath)->toMediaCollection('products');
+            });
+        }
+        DB::commit();
         // Return the newly created product
         return $product;
+        /* } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al editar el producto: ' . $e->getMessage());
+            return response()->json(['error' => 'Error al editar el producto'], 500);
+        } */
     }
 }

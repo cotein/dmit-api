@@ -11,9 +11,17 @@ class PriceList extends Model implements Auditable
 {
     use HasFactory, \OwenIt\Auditing\Auditable;
 
+    protected $fillable = [
+        'pricelist_id',
+        'product_id',
+        'price',
+        'profit_percentage',
+        'profit_rate',
+    ];
+
     public function products(): BelongsToMany
     {
-        //return $this->belongsToMany(Product::class, 'price_list_product', 'pricelist_id', 'product_id')->withPivot(['price', 'profit_percentage', 'profit_rate']);
-        return $this->belongsToMany(Product::class);
+        return $this->belongsToMany(Product::class, 'price_list_product', 'pricelist_id', 'product_id')
+            ->withPivot(['price', 'profit_percentage', 'profit_rate']);
     }
 }

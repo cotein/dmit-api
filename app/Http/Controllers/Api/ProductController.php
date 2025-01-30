@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
 use App\Src\Repositories\ProductRepository;
+use App\Transformers\ProductListTransformer;
 use App\Transformers\ProductTransformer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -28,6 +29,28 @@ class ProductController extends Controller
             return response()->json($totalProducts, 200);
         }
 
+        if ($request->has('list')) {
+            $listProducts = $this->productRepository->find($request);
+
+            $data = fractal($listProducts, new ProductListTransformer())->toArray()['data'];
+
+            $pagination = [
+                'total' => $listProducts->total(),
+                'per_page' => $listProducts->perPage(),
+                'current_page' => $listProducts->currentPage(),
+                'last_page' => $listProducts->lastPage(),
+                'from' => $listProducts->firstItem(),
+                'to' => $listProducts->lastItem()
+            ];
+
+            $response = [
+                'pagination' => $pagination,
+                'data' => $data
+            ];
+
+            return response()->json($response, 200);
+        }
+
         $products = $this->productRepository->find($request);
 
         $products = fractal($products, new ProductTransformer())->toArray()['data'];
@@ -38,9 +61,15 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(ProductRequest $request)
+    public function store(Request $request)
     {
+        $request->validate([
+            'product.name' => 'required',
+        ]);
+
         $product = $this->productRepository->store($request);
+
+        $product = fractal($product, new ProductTransformer())->toArray()['data'];
 
         return response()->json($product, 201);
     }
@@ -58,7 +87,11 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $product = $this->productRepository->update($request);
+
+        $product = fractal($product, new ProductTransformer())->toArray()['data'];
+
+        return response()->json($product, 200);
     }
 
     /**
