@@ -23,7 +23,7 @@ class SaleInvoiceRepository
 {
     protected $customer_cuenta_corriente_repository;
 
-    private $voucherIdsToSum = [1, 2, 6, 7, 11, 12, 201, 202, 206, 207, 211, 212];
+    private $voucherIdsToSum = [1, 2, 6, 7, 11, 12, 92, 93, 95, 96, 99, 100];
 
 
     public function __construct(CustomerCuentaCorrienteRepository $customer_cuenta_corriente_repository)

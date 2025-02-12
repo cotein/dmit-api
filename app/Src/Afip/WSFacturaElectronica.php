@@ -171,4 +171,28 @@ class WSFacturaElectronica
             throw $e;
         }
     }
+
+    public function FEParamGetCondicionIvaReceptor()
+    {
+        try {
+            $result =  $this->wsfe->FEParamGetCondicionIvaReceptor();
+
+            $errors = AfipHelper::getErrValues($result);
+
+            if ($errors) {
+                activity('FEParamGetCondicionIvaReceptor')
+                    ->causedBy(auth('api')->user())
+                    ->withProperties(json_decode(json_encode($result), true));
+                throw new Exception($errors[0]['Msg'], $errors[0]['Code']);
+            }
+
+            return $result;
+        } catch (Exception $e) {
+            activity('FEParamGetCondicionIvaReceptor')
+                ->causedBy(auth('api')->user())
+                ->log($e->getMessage());
+
+            throw $e;
+        }
+    }
 }

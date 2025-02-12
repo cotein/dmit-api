@@ -75,6 +75,14 @@ class AfipInscriptionSeeder extends Seeder
                     'name'  => 'Pequeño Contribuyente Eventual Social',
                     'short' => 'PCES',
                 ],
+                [
+                    'name'  => 'IVA No Alcanzado',
+                    'short' => 'INA',
+                ],
+                [
+                    'name'  => 'Monotributo Trabajador Independiente Promovido',
+                    'short' => 'MTIP',
+                ],
 
             ]
         );
