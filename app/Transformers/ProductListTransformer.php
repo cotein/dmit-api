@@ -69,11 +69,20 @@ class ProductListTransformer extends TransformerAbstract
             return $list->id . '';
         })->toArray();
     }
-    /**
-     * A Fractal transformer.
-     *
-     * @return array
-     */
+
+    private function images($product): array
+    {
+        return $product->getMedia('products')->map(function ($image) {
+            return [
+                'id' => $image->id,
+                'url' => $image->getUrl(),
+                'order' => $image->order_column,
+                'extension' => $image->mime_type,
+
+            ];
+        })->toArray();
+    }
+
     public function transform(Product $product)
     {
         return [
@@ -108,6 +117,7 @@ class ProductListTransformer extends TransformerAbstract
             'priority' => $product->priority_id,
             'cost' => $this->priceList($product)[0]['cost'],
             'lista_de_precios' => $this->priceList($product),
+            //'images' => $this->images($product),
         ];
     }
 }

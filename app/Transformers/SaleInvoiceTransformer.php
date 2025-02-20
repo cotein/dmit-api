@@ -231,6 +231,13 @@ class SaleInvoiceTransformer extends TransformerAbstract
         return [];
     }
 
+    private function isExpirated($si): bool
+    {
+        if ($si->sale_condition_id != 1) { //1 = contado
+            return Carbon::parse($si->fch_vto_pago)->isPast();
+        }
+        return false;
+    }
     /**
      * A Fractal transformer.
      *
@@ -316,7 +323,8 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 'typeNotaDebito' => $this->typeNotaDebito($afip_data),
                 'voucher_id' => $si->id,
                 'voucher_type' => $si->voucher->id,
-                'nota_credito_o_debito_text' => 'Sobre: ' .  $si->voucher->name . ' ' . ZeroLeft::print($si->pto_vta, 4) . ' - ' . ZeroLeft::print($si->cbte_desde, 8)
+                'nota_credito_o_debito_text' => 'Sobre: ' .  $si->voucher->name . ' ' . ZeroLeft::print($si->pto_vta, 4) . ' - ' . ZeroLeft::print($si->cbte_desde, 8),
+                'isExpirated' => $this->isExpirated($si),
             ],
 
             'items' => $this->items($si),

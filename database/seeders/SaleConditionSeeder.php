@@ -14,7 +14,7 @@ class SaleConditionSeeder extends Seeder
     {
         DB::table('sale_conditions')->truncate();
 
-        DB::table('sale_conditions')->insert([
+        $conditions = [
             [
                 'name'  => 'Contado',
                 'days' => 0,
@@ -31,11 +31,15 @@ class SaleConditionSeeder extends Seeder
                 'name'  => '30 Días fecha factura',
                 'days' => 30,
             ],
-            [
-                'name'  => 'Notas de crédito y débito',
-                'days' => 300000,
-            ],
+        ];
 
-        ]);
+        for ($i = 35; $i <= 120; $i += 5) {
+            $conditions[] = [
+                'name' => "$i Días fecha factura",
+                'days' => $i,
+            ];
+        }
+
+        DB::table('sale_conditions')->insert($conditions);
     }
 }

@@ -138,18 +138,17 @@ class ProductRepository
                 ]);
             });
 
-            // Add each picture to the product's media collection
-            collect($pics)->each(function ($photo) use ($product) {
-                $base64File = $photo['thumbUrl'];
+            if (collect($pics)->isNotEmpty()) {
 
-                $fileData = base64_decode($base64File);
+                collect($pics)->map(function ($pic) use ($product) {
+                    $base64Image = str_replace('data:image/png;base64,', '', $pic['thumbUrl']);
 
-                $tempFilePath = tempnam(sys_get_temp_dir(), 'base64file');
+                    $product->addMediaFromBase64($base64Image)
+                        ->withCustomProperties(['company_id' => auth()->user()->companies->first()->id, 'user_id' => auth()->user()->id])
+                        ->toMediaCollection('products');
+                });
+            }
 
-                file_put_contents($tempFilePath, $fileData);
-
-                $product->addMedia($tempFilePath)->toMediaCollection('products');
-            });
             DB::commit();
             // Return the newly created product
             return $product;
@@ -260,20 +259,17 @@ class ProductRepository
 
         if (collect($pics)->isNotEmpty()) {
 
-            $product->clearMediaCollection('products');
-            // Add each picture to the product's media collection
-            collect($pics)->each(function ($photo) use ($product) {
-                $base64File = $photo['thumbUrl'];
+            collect($pics)->map(function ($pic) use ($product) {
+                $base64Image = str_replace('data:image/png;base64,', '', $pic['thumbUrl']);
 
-                $fileData = base64_decode($base64File);
+                $product->clearMediaCollection('products');
 
-                $tempFilePath = tempnam(sys_get_temp_dir(), 'base64file');
-
-                file_put_contents($tempFilePath, $fileData);
-
-                $product->addMedia($tempFilePath)->toMediaCollection('products');
+                $product->addMediaFromBase64($base64Image)
+                    ->withCustomProperties(['company_id' => auth()->user()->companies->first()->id, 'user_id' => auth()->user()->id])
+                    ->toMediaCollection('products');
             });
         }
+
         DB::commit();
         // Return the newly created product
         return $product;

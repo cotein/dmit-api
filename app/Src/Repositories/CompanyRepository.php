@@ -115,24 +115,59 @@ class CompanyRepository
 
             $cbus = collect($data['cbus']);
 
-            if ($cbus->isNotEmpty()) {
+            /* if ($cbus->isNotEmpty()) {
 
                 $cbus->each(function ($cbuData) use ($company) {
-                    Log::info('ctaCte: ' . $cbuData['ctaCte']);
-                    $cbu = Cbu::updateOrCreate(
-                        [
-                            'cbu' => $cbuData['cbu'],
-                            'company_id' => $company->id
-                        ],
-                        [
-                            'bank_id' => $cbuData['bank_id'],
-                            'alias' => strtoupper($cbuData['alias']),
-                            'cta_cte' => strtoupper($cbuData['ctaCte'])
-                        ]
-                    );
+                    // Datos para la búsqueda o creación del registro
+                    $searchData = [
+                        'cbu' => $cbuData['cbu'],
+                        'company_id' => $company->id
+                    ];
+
+                    // Datos para la actualización o creación del registro
+                    $updateData = [
+                        'bank_id' => $cbuData['bank_id'],
+                        'alias' => strtoupper($cbuData['alias']),
+                        'cta_cte' => strtoupper($cbuData['ctaCte'])
+                    ];
+
+                    // Actualiza o crea el registro en la base de datos
+                    $cbu = Cbu::updateOrCreate($searchData, $updateData);
+                });
+            } */
+            if ($cbus->isNotEmpty()) {
+                // Obtener las cuentas corrientes actuales de la empresa
+                $existingCbus = Cbu::where('company_id', $company->id)->get();
+
+                // Crear una lista de las cuentas corrientes enviadas desde el frontend
+                $sentCbus = $cbus->pluck('cbu')->toArray();
+
+                // Actualizar o crear las cuentas corrientes enviadas
+                $cbus->each(function ($cbuData) use ($company) {
+                    // Datos para la búsqueda o creación del registro
+                    $searchData = [
+                        'cbu' => $cbuData['cbu'],
+                        'company_id' => $company->id
+                    ];
+
+                    // Datos para la actualización o creación del registro
+                    $updateData = [
+                        'bank_id' => $cbuData['bank_id'],
+                        'alias' => strtoupper($cbuData['alias']),
+                        'cta_cte' => strtoupper($cbuData['ctaCte'])
+                    ];
+
+                    // Actualiza o crea el registro en la base de datos
+                    $cbu = Cbu::updateOrCreate($searchData, $updateData);
+                });
+
+                // Eliminar las cuentas corrientes que no se enviaron
+                $existingCbus->each(function ($existingCbu) use ($sentCbus) {
+                    if (!in_array($existingCbu->cbu, $sentCbus)) {
+                        $existingCbu->delete();
+                    }
                 });
             }
-
             DB::commit();
 
             // Recargar la compañía para asegurarse de que todos los datos estén actualizados

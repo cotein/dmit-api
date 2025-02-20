@@ -108,7 +108,7 @@ class ReceiptTransformer extends TransformerAbstract
             'customer' => [
                 'id' => $r->customer_id,
                 'name' => $r->customer->name,
-                'lastname' => $r->customer->lastname,
+                'lastname' => $r->customer->last_name,
                 'email' => $r->customer->email,
                 'phone' => $r->customer->phone,
                 'address' => $r->customer->address,
