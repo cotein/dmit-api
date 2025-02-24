@@ -21,10 +21,10 @@ use App\Src\Strategy\InvoiceStatus\InvoiceStatusNotaCreditoStrategy;
 
 class SaleInvoiceRepository
 {
+
     protected $customer_cuenta_corriente_repository;
 
     private $voucherIdsToSum = [1, 2, 6, 7, 11, 12, 92, 93, 95, 96, 98, 99];
-
 
     public function __construct(CustomerCuentaCorrienteRepository $customer_cuenta_corriente_repository)
     {
@@ -54,7 +54,6 @@ class SaleInvoiceRepository
                 return $invoice->items->first()->total_amount ?? 0;
             });
     }
-
 
     public function getDailySalesReport(int $companyId = null): array
     {
