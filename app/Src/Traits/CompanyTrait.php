@@ -20,7 +20,9 @@ trait CompanyTrait
         // Verificar si el JSON fue decodificado correctamente
         if (json_last_error() === JSON_ERROR_NONE) {
             // Acceder a la propiedad localidad
-            $localidad = $afipData['datosGenerales']['domicilioFiscal']['localidad'] ?? null;
+            //$localidad = $afipData['datosGenerales']['domicilioFiscal']['localidad'] ?? null;
+            $localidad = $afipData['datosGenerales']['domicilioFiscal']['localidad']
+                ?? ($afipData['datosGenerales']['domicilioFiscal']['descripcionProvincia'] ?? null);
 
             if ($localidad) {
                 return $localidad;
