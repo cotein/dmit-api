@@ -35,7 +35,7 @@ class PasswordResetController extends Controller
             $client = new \GuzzleHttp\Client();
 
             // Hacer la solicitud de manera asíncrona
-            $promise = $client->postAsync(env('EMAIL_SENDER_URL') . '/api/email-sender/user-forgot-password', [
+            $promise = $client->postAsync('https://emailsender.dmit.ar/api/email-sender/user-forgot-password', [
                 'json' => [
                     'email' => $email,
                     'token' => $token, // Asegúrate de enviar el código generado
