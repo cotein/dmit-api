@@ -10,45 +10,36 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use App\Http\Controllers\Controller;
 use Illuminate\Auth\Events\Verified;
+use Illuminate\Support\Facades\Cache;
 use Lcobucci\JWT\Signer\Ecdsa\Sha256;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 class EmailVerificationController extends Controller
 {
 
-    public function verify(Request $request, $id, $hash)
+    public function verify_email(Request $request)
     {
-        $user = User::find($id);
+        header('Access-Control-Allow-Origin: http://localhost:5173');
+        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-        if (!$user) {
-            return response()->json('Usuario no encontrado', 404);
-        }
-
-        if ($user->email_verified_at) {
-            return response()->json('Cuenta ya verificada, inicie sesión en el Sistema', 200);
-        }
-
-        if (!hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
-            return response()->json('Hash de verificación no coincide', 400);
-        }
-        /* Log::info('hasValidRelativeSignature ' . $request->hasValidRelativeSignature());
-        if (!$request->hasValidRelativeSignature()) {
-            return response()->json('Firma inválida en la petición', 400);
-        } */
-
-        try {
-            $user->active = 1;
-            if ($user->markEmailAsVerified()) {
-                event(new Verified($user));
-            }
+        $token = $request->query('token');
+        // Verificar si el token existe en la caché
+        if (Cache::has('verification_token_' . $token)) {
+            $userId = Cache::get('verification_token_' . $token);
+            // Marcar el usuario como verificado
+            $user = User::find($userId);
+            $user->email_verified_at = now();
+            $user->active = true;
             $user->save();
-        } catch (\Exception $e) {
-            Log::error('Error al verificar el correo electrónico: ' . $e->getMessage());
-            return response()->json('Error al verificar el correo electrónico', 500);
-        }
+            // Eliminar el token de la caché
+            Cache::forget('verification_token_' . $token);
 
-        Log::info('Email verificado');
-        return response()->json('Email verificado, ya puede iniciar sesión en el Sistema', 200);
+            // Redirigir al usuario a la página de inicio del sistema de facturación
+            return response()->json(['message' => 'Verificación correcta. ¡Bienvenido, ' . $user->name . '!'], 200);
+        }
+        // Si el token no es válido o ha caducado, mostrar un mensaje de error
+        return response()->json(['message' => 'El enlace de verificación es inválido o ha caducado.'], 400);
     }
 
     function resend(Request $request)

@@ -9,10 +9,14 @@ return [
         '/register',
         '/auth/google',
         'oauth/*',
-        'email/verify/*',
-        'email/resend',
+        'verify-email/*',
+        '/email/resend',
         'storage/companies/*',
-        'updates'
+        'updates',
+        '/forgotPassword/reset/code',
+        '/forgotPassword/validate/code',
+        '/forgotPassword/resetPassword'
+
     ],
 
     'allowed_methods' => ['*'],

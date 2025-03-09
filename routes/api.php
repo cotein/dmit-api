@@ -23,19 +23,19 @@ use App\Http\Controllers\Api\AfipInscriptionController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\AfipFacturaElectronicaController;
 use App\Http\Controllers\Api\DashBoardController;
+use App\Http\Controllers\PasswordResetController;
 
 Route::get('updates', [DashBoardController::class, 'updates']);
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('register/check-cuit', [RegisterController::class, 'checkCuit']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('auth/google', [AuthController::class, 'googleLogin']);
-Route::get('email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->name('verification.verify'); // Make sure to keep this as your route name
+Route::get('verify-email', [EmailVerificationController::class, 'verify_email'])->name('verification.verify'); // Make sure to keep this as your route name
 Route::post('email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
-/* Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-    $request->fulfill();
+Route::post('password/email', [AuthController::class, 'forgotPassword']);
+Route::post('forgotPassword/reset/code', [PasswordResetController::class, 'passwordResetCode']);
+Route::post('forgotPassword/resetPassword', [PasswordResetController::class, 'resetPassword']);
 
-    return response()->json(['message' => 'Email verified successfully.']);
-})->middleware(['signed'])->name('verification.verify'); */
 Route::middleware(['auth:api'])->group(function () {
 
     Route::prefix('api')->group(function () {
