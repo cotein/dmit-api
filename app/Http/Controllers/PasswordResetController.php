@@ -9,9 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Validator;
 
 class PasswordResetController extends Controller
 {
@@ -37,7 +35,7 @@ class PasswordResetController extends Controller
             $client = new \GuzzleHttp\Client();
 
             // Hacer la solicitud de manera asíncrona
-            $promise = $client->postAsync('http://dmit_email_sender_app:3000/api/email-sender/user-forgot-password', [
+            $promise = $client->postAsync(env('EMAIL_SENDER_URL') . '/api/email-sender/user-forgot-password', [
                 'json' => [
                     'email' => $email,
                     'token' => $token, // Asegúrate de enviar el código generado
@@ -52,7 +50,6 @@ class PasswordResetController extends Controller
                         if ($response->getStatusCode() === 200) {
                             $responseBody = json_decode($response->getBody(), true);
                             if (isset($responseBody['error'])) {
-                                Log::error('Error en el servicio de envío de correo: ' . $responseBody['error']['message']);
                                 throw new \Exception('Error en el servicio de envío de correo: ' . $responseBody['error']['message']);
                             } else {
                                 Log::info('Correo enviado correctamente: ' . $response->getBody());
@@ -73,7 +70,6 @@ class PasswordResetController extends Controller
                 },
                 function ($exception) {
                     // Manejar errores de la solicitud
-                    Log::error('Error en la solicitud HTTP: ' . $exception->getMessage());
                     throw new \Exception('Error al enviar el correo de verificación: ' . $exception->getMessage());
                 }
             );
