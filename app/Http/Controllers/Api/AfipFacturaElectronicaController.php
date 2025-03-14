@@ -78,9 +78,9 @@ class AfipFacturaElectronicaController extends Controller
         $invoiceData = $this->prepareInvoiceData($request);
 
         if ($request->isMiPyme) {
-            $result = $this->afipWS->FECAESolicitar($request->all());
+            $invoiceResult = $this->afipWS->FECAESolicitar($request->all());
 
-            $invoiceData['result'] = json_decode(json_encode($result), true);
+            $invoiceData['result'] = json_decode(json_encode($invoiceResult), true);
 
             if ($this->isRejected($invoiceData['result'])) {
                 $this->handleRejection($invoiceData['result'], $request);
@@ -88,22 +88,28 @@ class AfipFacturaElectronicaController extends Controller
 
             $invoice = CreatedInvoice::dispatch($invoiceData);
 
-            return response()->json(['CbteTipo' => $invoiceData['FeCabReq']['CbteTipo'], 'invoice' => $invoice], 201);
+            $arcaEvents = $this->handleEvents($invoice, $request);
+
+            return response()->json(['CbteTipo' => $invoiceData['FeCabReq']['CbteTipo'], 'invoice' => $invoice, 'arcaEvents' => $arcaEvents], 201);
         }
 
         $clonedRequest = $request->all();
 
         $date = Carbon::parse($request->FECAEDetRequest['CbteFch'])->format('Y-m-d');
 
-        $result = $this->afipWS->consultarMontoObligadoRecepcion($request->customer['cuit'], $date);
+        $montoObligadoRecepcion = $this->afipWS->consultarMontoObligadoRecepcion($request->customer['cuit'], $date);
 
-        $array = json_decode(json_encode($result->consultarMontoObligadoRecepcionReturn), true);
+        $array = json_decode(json_encode($montoObligadoRecepcion->consultarMontoObligadoRecepcionReturn), true);
 
         if ($array['obligado'] === 'S' && $request->FECAEDetRequest['ImpTotal'] >= (float)$array['montoDesde']) {
+
             $clonedRequest['FeCabReq']['CbteTipo'] = $this->getCbteTipo($request->FeCabReq['CbteTipo']);
-            $result = $this->afipWS->FECompUltimoAutorizado($clonedRequest['FeCabReq']['CbteTipo'], $request->FeCabReq['PtoVta']);
-            $clonedRequest['FECAEDetRequest']['CbteDesde'] = $result->FECompUltimoAutorizadoResult->CbteNro + 1;
-            $clonedRequest['FECAEDetRequest']['CbteHasta'] = $result->FECompUltimoAutorizadoResult->CbteNro + 1;
+
+            $ultimoAutorizado = $this->afipWS->FECompUltimoAutorizado($clonedRequest['FeCabReq']['CbteTipo'], $request->FeCabReq['PtoVta']);
+
+            $clonedRequest['FECAEDetRequest']['CbteDesde'] = $ultimoAutorizado->FECompUltimoAutorizadoResult->CbteNro + 1;
+
+            $clonedRequest['FECAEDetRequest']['CbteHasta'] = $ultimoAutorizado->FECompUltimoAutorizadoResult->CbteNro + 1;
 
             return response()->json([
                 'isMipyme' => true,
@@ -115,7 +121,9 @@ class AfipFacturaElectronicaController extends Controller
 
         $invoice = $this->processNonMiPymeRequest($clonedRequest, $request, $invoiceData);
 
-        return response()->json(['CbteTipo' => $invoiceData['FeCabReq']['CbteTipo'], 'invoice' => $invoice], 201);
+        $arcaEvents = $this->handleEvents($invoice, $request);
+
+        return response()->json(['CbteTipo' => $invoiceData['FeCabReq']['CbteTipo'], 'invoice' => $invoice, 'arcaEvents' => $arcaEvents], 201);
     }
 
     /**
@@ -140,6 +148,35 @@ class AfipFacturaElectronicaController extends Controller
             'comments' => $request->comments,
             'parent' => $request->has('parent') ? $request->parent : null,
         ];
+    }
+
+    private function handleEvents($result, $request)
+    {
+        // Verifica si la clave 'Events' existe y si contiene eventos
+        if (isset($result['FECAESolicitarResult']['Events']['Evt'])) {
+            $events = $result['FECAESolicitarResult']['Events']['Evt'];
+
+            // Extrae los mensajes de los eventos
+            $mensajes = array_map(fn($evt) => $evt['Msg'], $events);
+
+            // Registra la actividad en el log
+            $activity = [
+                'log_name' => Constantes::FECAESolicitar,
+                'description' => collect($mensajes)->toJson(),
+                'causer_type' => 'App\Models\User',
+                'causer_id' => auth()->user()->id,
+                'company_id' => $request->company_id,
+                'properties' => collect($request->all())->toJson(),
+                'batch_uuid' => ''
+            ];
+            ActivityLog::save($activity);
+
+            // Puedes lanzar una excepción si lo consideras necesario
+            // throw new Exception(implode(', ', $mensajes));
+            return $mensajes;
+        }
+
+        return [];
     }
 
     /**
@@ -238,7 +275,9 @@ class AfipFacturaElectronicaController extends Controller
         $invoice = CreatedInvoice::dispatch($invoiceData);
 
         $activity['log_name'] = 'RESULTADO DE FACTURA ELECTRONICA';
+
         $activity['properties'] = $result;
+
         ActivityLog::save($activity);
 
         LogBatch::getUuid();
