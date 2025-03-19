@@ -55,6 +55,26 @@ return [
             ]) : [],
         ],
 
+        'dmit' => [
+            'driver' => 'mysql',
+            'url' => env('DATABASE_URL'),
+            'host' => 'www.dmit.ar',
+            'port' => env('DB_PORT', '3306'),
+            'database' => 'dmit-api',
+            'username' => 'root',
+            'password' => '311034',
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => false,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'vete' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
