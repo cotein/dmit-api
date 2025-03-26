@@ -106,7 +106,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
     protected function comprAsociado(array $afip_data): array
     {
         if (is_string($afip_data)) {
-            Log::info($afip_data);
+            Log::info("wwwwwwwwwwwwww " . $afip_data);
         }
 
         return [
