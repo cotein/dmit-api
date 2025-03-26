@@ -3,16 +3,16 @@
 namespace App\Src\Repositories;
 
 use Exception;
-use App\Models\AfipDocument;
 use App\Models\Customer;
-use Illuminate\Database\Eloquent\Collection;
+use App\Models\AfipDocument;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class CustomerRepository
 {
     public function find(Request $request)
     {
+
         $customers = Customer::query();
 
         $customers = $customers->where('company_id', (int) $request->company_id);
@@ -25,21 +25,23 @@ class CustomerRepository
             return null;
         }
 
+        $searchTerm = strtoupper($request->name);
+
         if ($request->has('name')) {
-            $customers = $customers->where(function ($query) use ($request) {
-                $query->whereRaw("CONCAT(name, ' ', last_name) LIKE ?", "%{$request->name}%");
+
+            $customers = $customers->where(function ($query) use ($searchTerm) {
+                $query->where('afip_number', 'like', "%{$searchTerm}%")
+                ->orWhereRaw("CONCAT_WS(' ', name, last_name) LIKE ?", ["%{$searchTerm}%"]);
             });
-            /* $customers = $customers->where(function ($query) use ($request) {
-                $query->where('name', 'like', "%{$request->name}%")
-                    ->orWhere('last_name', 'like', "%{$request->name}%")
-                    ->orWhere('fantasy_name', 'like', "%{$request->name}%");
-            }); */
         }
 
         if ($request->has('isActive')) {
             $isActive = $request->isActive;
 
             switch ($isActive) {
+                case 'all':
+                    $customers = $customers->where('active', true);
+                    break;
                 case 'active':
                     $customers = $customers->where('active', true);
                     break;
