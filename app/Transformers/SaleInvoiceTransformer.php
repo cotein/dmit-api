@@ -8,6 +8,7 @@ use App\Src\Constantes;
 use App\Src\Helpers\ZeroLeft;
 use App\Src\Traits\AddressTrait;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use League\Fractal\TransformerAbstract;
 
 
@@ -104,6 +105,10 @@ class SaleInvoiceTransformer extends TransformerAbstract
 
     protected function comprAsociado(array $afip_data): array
     {
+        if (is_string($afip_data)) {
+            Log::info($afip_data);
+        }
+
         return [
             'Tipo' => $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'],
             'PtoVta' => $afip_data['FECAESolicitarResult']['FeCabResp']['PtoVta'],
