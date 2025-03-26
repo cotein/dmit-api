@@ -257,7 +257,12 @@ class SaleInvoiceTransformer extends TransformerAbstract
      */
     public function transform(SaleInvoices $si)
     {
-        $afip_data = json_decode($si->afip_data, TRUE);
+        $afip_data = json_decode($si->afip_data, true);
+
+        // Verificar si hubo errores
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception('Error decodificando JSON: ' . json_last_error_msg());
+        }
 
         $url_logo = null;
 
