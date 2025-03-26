@@ -27,83 +27,59 @@ class SaleInvoiceController extends Controller
      */
     public function index(Request $request)
     {
+        Log::info('Invoice Request:', $request->all());
+
         $invoices = $this->saleInvoiceRepository->find($request);
+        Log::debug('Datos obtenidos:', [
+            'total' => $invoices->count() ?? 0,
+            'ejemplo' => $invoices->first() ?? null
+        ]);
 
-        if ($request->has('getLastMonthInvoiced')) {
-
-            return response()->json($invoices, 200);
+        // Reemplazo del match con switch tradicional
+        if ($request->has('getLastMonthInvoiced') || $request->has('getDailySalesReport')) {
+            $response = $this->basicResponse($invoices);
+        } elseif ($request->has('getPaymentOnReceipt')) {
+            $response = $this->transformedResponse($invoices, new SaleInvoiceReceiptTransformer());
+        } elseif ($request->has('print') && $request->get('print') === 'yes') {
+            $response = $this->transformedResponse($invoices, new SaleInvoicePrintTransformer());
+        } elseif ($request->has('invoice_id')) {
+            $response = $this->transformedResponse($invoices, new SaleInvoiceWithPreviousPayments());
+        } elseif ($request->has('comments')) {
+            $response = $this->paginatedResponse($invoices, new SaleInvoiceCommentsTransformer());
+        } else {
+            $response = $this->paginatedResponse($invoices, new SaleInvoiceTransformer());
         }
 
-        if ($request->has('getDailySalesReport')) {
-
-            return response()->json($invoices, 200);
-        }
-
-        if ($request->has('getPaymentOnReceipt')) {
-
-            $invoices = fractal($invoices, new SaleInvoiceReceiptTransformer())->toArray()['data'];
-
-            return response()->json($invoices, 200);
-        }
-
-        if ($request->has('print') && $request->get('print') === 'yes') {
-
-            $invoices = fractal($invoices, new SaleInvoicePrintTransformer())->toArray()['data'];
-
-            return response()->json($invoices, 200);
-        }
-
-        if ($request->has('invoice_id')) {
-
-            $invoices = fractal($invoices, new SaleInvoiceWithPreviousPayments())->toArray()['data'];
-
-            return response()->json($invoices, 200);
-        }
-
-        if ($request->has('comments')) {
-
-            $data = fractal($invoices, new SaleInvoiceCommentsTransformer())->toArray()['data'];
-
-            $pagination = [
-                'total' => $invoices->total(),
-                'per_page' => $invoices->perPage(),
-                'current_page' => $invoices->currentPage(),
-                'last_page' => $invoices->lastPage(),
-                'from' => $invoices->firstItem(),
-                'to' => $invoices->lastItem()
-            ];
-
-            $response = [
-                'pagination' => $pagination,
-                'data' => $data
-            ];
-
-            return response()->json($response, 200);
-        }
-
-        if (!$request->has('print')) {
-            $invoices = fractal($invoices, new SaleInvoiceTransformer())->toArray()['data'];
-
-            return response()->json($invoices, 200);
-        }
-
-        $data = fractal($invoices, new SaleInvoiceTransformer())->toArray()['data'];
-
-        $pagination = [
-            'total' => $invoices->total(),
-            'per_page' => $invoices->perPage(),
-            'current_page' => $invoices->currentPage(),
-            'last_page' => $invoices->lastPage(),
-            'from' => $invoices->firstItem(),
-            'to' => $invoices->lastItem()
-        ];
-
-        $response = [
-            'pagination' => $pagination,
-            'data' => $data
-        ];
-
+        Log::debug('Respuesta final:', is_array($response) ? $response : ['data' => $response]);
         return response()->json($response, 200);
+    }
+
+    // Métodos auxiliares (se mantienen igual)
+    private function basicResponse($data)
+    {
+        return $data;
+    }
+
+    private function transformedResponse($data, $transformer)
+    {
+        return fractal($data, $transformer)->toArray()['data'];
+    }
+
+    private function paginatedResponse($data, $transformer)
+    {
+        $transformed = fractal($data, $transformer)->toArray();
+
+        return [
+            'pagination' => [
+                'total' => $data->total(),
+                'per_page' => $data->perPage(),
+                'current_page' => $data->currentPage(),
+                'last_page' => $data->lastPage(),
+                'from' => $data->firstItem(),
+                'to' => $data->lastItem()
+            ],
+            'data' => $transformed['data']
+        ];
     }
 
     /**
