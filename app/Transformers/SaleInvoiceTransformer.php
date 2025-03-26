@@ -105,8 +105,15 @@ class SaleInvoiceTransformer extends TransformerAbstract
 
     protected function comprAsociado(array $afip_data): array
     {
-        if (is_string($afip_data)) {
-            Log::info("wwwwwwwwwwwwww " . $afip_data);
+        if (!is_array($afip_data) || empty($afip_data)) {
+
+            Log::warning('Datos AFIP inválidos', [
+                'tipo_recibido' => gettype($afip_data),
+                'esta_vacio' => is_array($afip_data) && empty($afip_data),
+                'contenido' => $afip_data
+            ]);
+
+            return [];
         }
 
         return [
