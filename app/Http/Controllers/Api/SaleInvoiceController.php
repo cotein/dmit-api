@@ -30,10 +30,7 @@ class SaleInvoiceController extends Controller
         Log::info('Invoice Request:', $request->all());
 
         $invoices = $this->saleInvoiceRepository->find($request);
-        Log::debug('Datos obtenidos:', [
-            'total' => $invoices->count() ?? 0,
-            'ejemplo' => $invoices->first() ?? null
-        ]);
+
 
         // Reemplazo del match con switch tradicional
         if ($request->has('getLastMonthInvoiced') || $request->has('getDailySalesReport')) {

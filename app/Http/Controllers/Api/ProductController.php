@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductRequest;
+use App\Transformers\ProductTransformer;
 use App\Src\Repositories\ProductRepository;
 use App\Transformers\ProductListTransformer;
-use App\Transformers\ProductTransformer;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -58,29 +59,30 @@ class ProductController extends Controller
         return response()->json($products, 200);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $request->validate([
-            'product.name' => 'required',
-        ]);
 
-        $product = $this->productRepository->store($request);
+        try {
+            $product = $this->productRepository->store($request);
 
-        $product = fractal($product, new ProductTransformer())->toArray()['data'];
+            $transformedProduct = fractal($product, new ProductTransformer())->toArray();
 
-        return response()->json($product, 201);
+
+            return response()->json($transformedProduct['data'], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->validator->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
@@ -94,17 +96,5 @@ class ProductController extends Controller
         return response()->json($product, 200);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
-    }
-    public function img(Request $request)
-    {
-        Log::alert('imggggggggggggggg');
-        Log::alert($request->all());
-        Log::alert('imggggggggggggggg');
-    }
+
 }

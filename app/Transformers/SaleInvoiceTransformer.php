@@ -98,12 +98,84 @@ class SaleInvoiceTransformer extends TransformerAbstract
         return null;
     } */
 
-    protected function concepto(array $afip_data): int
+    /* protected function concepto(array $afip_data): int
     {
         return $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Concepto'];
-    }
+    } */
 
-    protected function comprAsociado(array $afip_data): array
+    protected function concepto(mixed $afip_data): int
+    {
+        // Si es string, decodificar primero
+        if (is_string($afip_data)) {
+            $afip_data = trim($afip_data, '"');
+            $decoded = json_decode($afip_data, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                \Log::error('Error decodificando afip_data en concepto()', [
+                    'input' => $afip_data,
+                    'error' => json_last_error_msg()
+                ]);
+                return 1; // Valor por defecto seguro
+            }
+
+            $afip_data = $decoded;
+        }
+
+        // Verificar estructura completa del array
+        try {
+            return $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Concepto'] ?? 1;
+        } catch (\Throwable $e) {
+            \Log::warning('Estructura AFIP inválida en concepto()', [
+                'exception' => $e->getMessage(),
+                'data' => $afip_data
+            ]);
+            return 1; // Valor por defecto según RG AFIP
+        }
+    }
+    protected function comprAsociado(mixed $afip_data): array
+    {
+        // Si es string, decodificar primero
+        if (is_string($afip_data)) {
+            // Eliminar comillas exteriores si existen
+            $afip_data = trim($afip_data, '"');
+
+            // Decodificar el JSON interno
+            $decoded = json_decode($afip_data, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                \Log::error('Error decodificando afip_data', [
+                    'input' => $afip_data,
+                    'error' => json_last_error_msg()
+                ]);
+                return [];
+            }
+
+            $afip_data = $decoded;
+        }
+
+        // Verificar que ahora sea un array
+        if (!is_array($afip_data)) {
+            return [];
+        }
+
+        // Resto de la lógica original...
+        try {
+            return [
+                'Tipo' => $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'],
+                'PtoVta' => $afip_data['FECAESolicitarResult']['FeCabResp']['PtoVta'],
+                'Nro' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse']['CbteDesde'],
+                'Cuit' => $afip_data['FECAESolicitarResult']['FeCabResp']['Cuit'],
+                'CbteFch' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse']['CbteFch']
+            ];
+        } catch (\Exception $e) {
+            \Log::error('Error procesando afip_data', [
+                'exception' => $e->getMessage(),
+                'data' => $afip_data
+            ]);
+            return [];
+        }
+    }
+    /* protected function comprAsociado(array $afip_data): array
     {
         if (!is_array($afip_data) || empty($afip_data)) {
 
@@ -123,9 +195,9 @@ class SaleInvoiceTransformer extends TransformerAbstract
             'Cuit' => $afip_data['FECAESolicitarResult']['FeCabResp']['Cuit'], //emisor
             'CbteFch' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteFch'],
         ];
-    }
+    } */
 
-    protected function typeNotaCredito(array $afip_data)
+    /* protected function typeNotaCredito(array $afip_data)
     {
         $invoices = [
             1 => 3,
@@ -169,9 +241,47 @@ class SaleInvoiceTransformer extends TransformerAbstract
         }
 
         return null;
+    } */
+
+    private function getTipoComprobanteMapeado(mixed $afip_data, array $mapeo)
+    {
+        try {
+            $data = is_string($afip_data)
+                ? json_decode(trim($afip_data, '"'), true)
+                : $afip_data;
+
+            if (!is_array($data)) {
+                \Log::warning('Datos AFIP no son un array', ['data' => $afip_data]);
+                return null;
+            }
+
+            $cbteTipo = (int) ($data['FECAESolicitarResult']['FeCabResp']['CbteTipo'] ?? 0);
+            return $mapeo[$cbteTipo] ?? null;
+
+        } catch (\Throwable $e) {
+            \Log::error('Error obteniendo tipo comprobante mapeado', [
+                'error' => $e->getMessage(),
+                'data' => $afip_data
+            ]);
+            return null;
+        }
     }
 
-    protected function isNotaCredito($afip_data): bool
+    protected function typeNotaCredito(mixed $afip_data)
+    {
+        return $this->getTipoComprobanteMapeado($afip_data, [
+            1 => 3, 2 => 3, 6 => 8, 7 => 8, 11 => 13, 12 => 13,
+            201 => 203, 202 => 203, 206 => 208, 207 => 208, 211 => 213, 212 => 213
+        ]);
+    }
+
+    protected function typeNotaDebito(mixed $afip_data)
+    {
+        return $this->getTipoComprobanteMapeado($afip_data, [
+            1 => 2, 6 => 7, 11 => 12, 201 => 202, 206 => 207, 211 => 212
+        ]);
+    }
+    /* protected function isNotaCredito(array $afip_data): bool
     {
         $invoices = [
             3 => true,
@@ -191,7 +301,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
         return false;
     }
 
-    protected function isNotaDebito($afip_data): bool
+    protected function isNotaDebito(array $afip_data): bool
     {
         $invoices = [
             2 => true,
@@ -209,8 +319,46 @@ class SaleInvoiceTransformer extends TransformerAbstract
         }
 
         return false;
+    } */
+
+    private function checkTipoComprobante(mixed $afip_data, array $tipos): bool
+    {
+        try {
+            $data = is_string($afip_data)
+                ? json_decode(trim($afip_data, '"'), true)
+                : $afip_data;
+
+            if (!is_array($data)) {
+                return false;
+            }
+
+            $codigo = (int) ($data['FECAESolicitarResult']['FeCabResp']['CbteTipo'] ?? 0);
+            return $tipos[$codigo] ?? false;
+
+        } catch (\Throwable $e) {
+            \Log::error('Error verificando tipo comprobante', [
+                'error' => $e->getMessage(),
+                'data' => $afip_data
+            ]);
+            return false;
+        }
     }
 
+    protected function isNotaCredito(mixed $afip_data): bool
+    {
+        return $this->checkTipoComprobante($afip_data, [
+            3 => true, 8 => true, 13 => true,
+            203 => true, 208 => true, 213 => true
+        ]);
+    }
+
+    protected function isNotaDebito(mixed $afip_data): bool
+    {
+        return $this->checkTipoComprobante($afip_data, [
+            2 => true, 7 => true, 12 => true,
+            202 => true, 207 => true, 212 => true
+        ]);
+    }
     private function formatInvoiceData(SaleInvoices $invoice): array
     {
         return [

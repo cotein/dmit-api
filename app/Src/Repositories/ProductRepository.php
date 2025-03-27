@@ -155,7 +155,7 @@ class ProductRepository
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear el producto: ' . $e->getMessage());
-            return response()->json(['error' => 'Error al crear el producto'], 500);
+            throw $e; // Lanza la excepción en lugar de manejarla
         }
     }
 
