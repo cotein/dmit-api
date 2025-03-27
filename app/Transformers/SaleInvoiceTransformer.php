@@ -405,6 +405,18 @@ class SaleInvoiceTransformer extends TransformerAbstract
      */
     public function transform(SaleInvoices $si)
     {
+        // Verificar si existe la relación customer
+        if (!$si->customer) {
+            Log::info('########');
+            Log::warning('Customer no encontrado - Registro omitido', [
+                'invoice_id' => $si->id,
+                'customer_id' => $si->customer_id,
+                'company_id' => $si->company_id
+            ]);
+            Log::info('########');
+            // Retornar null para omitir este registro
+            return null;
+        }
         $afip_data = json_decode($si->afip_data, true);
 
         // Verificar si hubo errores
