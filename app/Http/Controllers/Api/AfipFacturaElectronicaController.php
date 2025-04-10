@@ -82,8 +82,11 @@ class AfipFacturaElectronicaController extends Controller
 
             $invoiceData['result'] = json_decode(json_encode($invoiceResult), true);
 
+
             if ($this->isRejected($invoiceData['result'])) {
-                $this->handleRejection($invoiceData['result'], $request);
+                $messages = $this->handleRejection($invoiceData['result'], $request);
+
+                $invoiceData['messages'] = $messages;
             }
 
             $invoice = CreatedInvoice::dispatch($invoiceData);
@@ -206,8 +209,8 @@ class AfipFacturaElectronicaController extends Controller
                 'batch_uuid' => ''
             ];
             ActivityLog::save($activity);
-
-            throw new Exception(implode(', ', $mensajes));
+            return $mensajes;
+            //throw new Exception(implode(', ', $mensajes));
         }
     }
 
@@ -269,7 +272,9 @@ class AfipFacturaElectronicaController extends Controller
         $invoiceData['result'] = json_decode(json_encode($result), true);
 
         if ($this->isRejected($invoiceData['result'])) {
-            $this->handleRejection($invoiceData['result'], $request);
+            $messages = $this->handleRejection($invoiceData['result'], $request);
+
+            $invoiceData['messages'] = $messages;
         }
 
         $invoice = CreatedInvoice::dispatch($invoiceData);

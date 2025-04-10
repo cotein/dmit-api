@@ -45,15 +45,15 @@ class WSFacturaElectronica
 
             return $result;
         } catch (FECompUltimoAutorizadoException $e) {
-            activity(Constantes::ERROR_WSFE_ULTIMO_AUTORIZADO)
+            /* activity(Constantes::ERROR_WSFE_ULTIMO_AUTORIZADO)
                 ->causedBy(auth('api')->user())
-                ->log($e->getMessage());
+                ->log($e->getMessage()); */
 
             throw $e;
         } catch (\Exception $e) {
-            activity(Constantes::ERROR_WSFE_ULTIMO_AUTORIZADO)
+            /* activity(Constantes::ERROR_WSFE_ULTIMO_AUTORIZADO)
                 ->causedBy(auth('api')->user())
-                ->log($e->getMessage());
+                ->log($e->getMessage()); */
 
             throw $e;
         }
@@ -104,17 +104,17 @@ class WSFacturaElectronica
 
             return $result;
         } catch (FEParamGetPtosVentaException $e) {
-            activity(Constantes::ERROR_WSFE_PTO_VENTA)
+            /* activity(Constantes::ERROR_WSFE_PTO_VENTA)
                 ->causedBy(auth('api')->user())
                 ->withProperties($FECAESolicitarArray)
-                ->log($e->getMessage());
+                ->log($e->getMessage()); */
 
             throw $e;
         } catch (\Exception $e) {
-            activity(Constantes::ERROR_WSFE_ULTIMO_AUTORIZADO)
+            /* activity(Constantes::ERROR_WSFE_ULTIMO_AUTORIZADO)
                 ->causedBy(auth('api')->user())
                 ->withProperties($FECAESolicitarArray)
-                ->log($e->getMessage());
+                ->log($e->getMessage()); */
 
             throw $e;
         }
