@@ -118,7 +118,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
 
         if($si->customer_id === 5){
 
-            // Si es string, decodificar primero
+            /* // Si es string, decodificar primero
             if (is_string($si->afip_data)) {
                 // Eliminar comillas exteriores si existen
                 $afip_data = trim($si->afip_data, '"');
@@ -140,9 +140,9 @@ class SaleInvoiceTransformer extends TransformerAbstract
             // Verificar que ahora sea un array
             if (!is_array($afip_data)) {
                 return [];
-            }
+            } */
         }
-
+        $afip_data = $si->afip_data;
         // Resto de la lógica original...
         try {
             return [
