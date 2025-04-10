@@ -113,30 +113,34 @@ class SaleInvoiceTransformer extends TransformerAbstract
             return 1; // Valor por defecto según RG AFIP
         }
     }
-    protected function comprAsociado(mixed $afip_data): array
+    protected function comprAsociado($si): array
     {
-        // Si es string, decodificar primero
-        if (is_string($afip_data)) {
-            // Eliminar comillas exteriores si existen
-            $afip_data = trim($afip_data, '"');
 
-            // Decodificar el JSON interno
-            $decoded = json_decode($afip_data, true);
+        if($si->customer_id === 5){
 
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                \Log::error('Error decodificando afip_data', [
-                    'input' => $afip_data,
-                    'error' => json_last_error_msg()
-                ]);
-                return [];
+            // Si es string, decodificar primero
+            if (is_string($si->afip_data)) {
+                // Eliminar comillas exteriores si existen
+                $afip_data = trim($si->afip_data, '"');
+
+                // Decodificar el JSON interno
+                $decoded = json_decode($afip_data, true);
+
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    \Log::error('Error decodificando afip_data', [
+                        'input' => $afip_data,
+                        'error' => json_last_error_msg()
+                    ]);
+                    return [];
+                }
+
+                $afip_data = $decoded;
             }
 
-            $afip_data = $decoded;
-        }
-
-        // Verificar que ahora sea un array
-        if (!is_array($afip_data)) {
-            return [];
+            // Verificar que ahora sea un array
+            if (!is_array($afip_data)) {
+                return [];
+            }
         }
 
         // Resto de la lógica original...
@@ -350,7 +354,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 'cae' => $si->cae,
                 'cbte_desde' => ZeroLeft::print($si->cbte_desde, 8),
                 'cbte_fch' => Carbon::parse($si->cbte_fch)->format('d-m-Y'),
-                'cbteAsoc' => $this->comprAsociado($afip_data),
+                'cbteAsoc' => $this->comprAsociado($si),
                 'children' => $this->children($si), //cuando una factura tiene nota de credito
                 'concepto' => $this->concepto($afip_data),
                 'fch_serv_desde' => $si->fch_serv_desde,
