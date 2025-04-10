@@ -51,7 +51,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
     {
         return $si->items->map(function ($item) use($si) {
             Log::info('FACTURA - ES EL ID ' . $si->id );
-            Log::info('FACTURA - CUSTOMER_ID ' . $si->customer_id );
+            Log::info('FACTURA - COMPANY_ID ' . $si->company_id );
             Log::info('TABLA ITEMS - SALEINVOICE_ID ' . $item->sale_invoice_id );
             Log::info('TABLA ITEMS - PRODUCTO - ES EL ID ' . $item->product_id  );
             Log::info('');
