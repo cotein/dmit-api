@@ -50,8 +50,11 @@ class SaleInvoiceTransformer extends TransformerAbstract
     protected function items(SaleInvoices $si): array
     {
         return $si->items->map(function ($item) use($si) {
-            Log::info('FACTURA - ES EL ID ' . $si->id . ' PRODUCTO - ES EL ID ' . $item->product->id);
+            Log::info('FACTURA - ES EL ID ' . $si->id );
+            Log::info('TABLA ITEMS - SALEINVOICE_ID ' . $item->sale_invoice_id );
+            Log::info('TABLA ITEMS - PRODUCTO - ES EL ID ' . $item->product_id  );
             Log::info('');
+
             return [
                 'id' => $item->product->id,
                 'key' => $item->id,
