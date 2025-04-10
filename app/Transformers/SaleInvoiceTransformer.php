@@ -113,51 +113,36 @@ class SaleInvoiceTransformer extends TransformerAbstract
             return 1; // Valor por defecto según RG AFIP
         }
     }
+
     protected function comprAsociado($si): array
     {
+        // Decodificar el JSON
+        $afip_data = json_decode($si->afip_data, true);
 
-        if($si->customer_id === 5){
-
-            /* // Si es string, decodificar primero
-            if (is_string($si->afip_data)) {
-                // Eliminar comillas exteriores si existen
-                $afip_data = trim($si->afip_data, '"');
-
-                // Decodificar el JSON interno
-                $decoded = json_decode($afip_data, true);
-
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    \Log::error('Error decodificando afip_data', [
-                        'input' => $afip_data,
-                        'error' => json_last_error_msg()
-                    ]);
-                    return [];
-                }
-
-                $afip_data = $decoded;
-            }
-
-            // Verificar que ahora sea un array
-            if (!is_array($afip_data)) {
-                return [];
-            } */
+        // Verificar si el JSON se decodificó correctamente
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($afip_data)) {
+            \Log::error('Error decodificando afip_data', [
+                'error' => json_last_error_msg(),
+                'raw_data' => $si->afip_data
+            ]);
+            return [];
         }
-        $afip_data = collect(json_decode($si->afip_data, true));
-        // Resto de la lógica original...
+
         try {
+            // Acceder correctamente al array (nota el [0] para FECAEDetResponse)
             return [
-                'Tipo' => $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'],
-                'PtoVta' => $afip_data['FECAESolicitarResult']['FeCabResp']['PtoVta'],
-                'Nro' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse']['CbteDesde'],
-                'Cuit' => $afip_data['FECAESolicitarResult']['FeCabResp']['Cuit'],
-                'CbteFch' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse']['CbteFch']
+                'Tipo' => $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'] ?? null,
+                'PtoVta' => $afip_data['FECAESolicitarResult']['FeCabResp']['PtoVta'] ?? null,
+                'Nro' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteDesde'] ?? null,
+                'Cuit' => $afip_data['FECAESolicitarResult']['FeCabResp']['Cuit'] ?? null,
+                'CbteFch' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteFch'] ?? null
             ];
         } catch (\Exception $e) {
             \Log::error('Error procesando afip_data', [
                 'exception' => $e->getMessage(),
-                //'data' => $afip_data
+                'data' => $afip_data // Descomenta para debug
             ]);
-            return [];
+            return ['exception' => $e->getMessage()];
         }
     }
 
