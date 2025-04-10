@@ -138,7 +138,7 @@ class SaleInvoiceRepository
         $query = SaleInvoices::query();
 
         // Filtrar por compañía
-        $query->where('company_id', $request->company_id);
+        $query->where('company_id', (int) $request->company_id);
 
         if ($request->has('getLastMonthInvoiced')) {
 
