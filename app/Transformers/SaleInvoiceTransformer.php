@@ -142,7 +142,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
                 return [];
             } */
         }
-        $afip_data = $si->afip_data;
+        $afip_data = collect(json_decode($si->afip_data, true));
         // Resto de la lógica original...
         try {
             return [
@@ -155,7 +155,7 @@ class SaleInvoiceTransformer extends TransformerAbstract
         } catch (\Exception $e) {
             \Log::error('Error procesando afip_data', [
                 'exception' => $e->getMessage(),
-                'data' => $afip_data
+                //'data' => $afip_data
             ]);
             return [];
         }
