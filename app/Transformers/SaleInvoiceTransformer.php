@@ -49,7 +49,9 @@ class SaleInvoiceTransformer extends TransformerAbstract
 
     protected function items(SaleInvoices $si): array
     {
-        return $si->items->map(function ($item) {
+        return $si->items->map(function ($item) use($si) {
+            Log::info('FACTURA - ES EL ID ' . $si->id . ' PRODUCTO - ES EL ID ' . $item->product->id);
+            Log::info('');
             return [
                 'id' => $item->product->id,
                 'key' => $item->id,
@@ -77,31 +79,6 @@ class SaleInvoiceTransformer extends TransformerAbstract
     {
         return $si->items->sum('total') + $si->items->sum('percep_iibb_import') + $si->items->sum('percep_iva_import');
     }
-
-    /**
-     * Returns the address of the customer
-     *
-     * @param SaleInvoices $si The sale invoice model
-     * @return array|null The customer's address or null if the customer does not have an address
-     */
-    /* protected function address(SaleInvoices $si): ?array
-    {
-        if ($si->customer->address()->exists()) {
-            return [
-                'city' => $si->customer->address->city,
-                'street' => $si->customer->address->street,
-                'cp' => $si->customer->address->cp,
-                'state' => AfipState::where('afip_code', $si->customer->address->state_id)->get()->first()->name
-            ];
-        }
-
-        return null;
-    } */
-
-    /* protected function concepto(array $afip_data): int
-    {
-        return $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Concepto'];
-    } */
 
     protected function concepto(mixed $afip_data): int
     {
@@ -175,73 +152,6 @@ class SaleInvoiceTransformer extends TransformerAbstract
             return [];
         }
     }
-    /* protected function comprAsociado(array $afip_data): array
-    {
-        if (!is_array($afip_data) || empty($afip_data)) {
-
-            Log::warning('Datos AFIP inválidos', [
-                'tipo_recibido' => gettype($afip_data),
-                'esta_vacio' => is_array($afip_data) && empty($afip_data),
-                'contenido' => $afip_data
-            ]);
-
-            return [];
-        }
-
-        return [
-            'Tipo' => $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'],
-            'PtoVta' => $afip_data['FECAESolicitarResult']['FeCabResp']['PtoVta'],
-            'Nro' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteDesde'],
-            'Cuit' => $afip_data['FECAESolicitarResult']['FeCabResp']['Cuit'], //emisor
-            'CbteFch' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteFch'],
-        ];
-    } */
-
-    /* protected function typeNotaCredito(array $afip_data)
-    {
-        $invoices = [
-            1 => 3,
-            2 => 3,
-            6 => 8,
-            7 => 8,
-            11 => 13,
-            12 => 13,
-            201 => 203,
-            202 => 203,
-            206 => 208,
-            207 => 208,
-            211 => 213,
-            212 => 213,
-        ];
-
-        $cbteTipo = (int) $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'];
-
-        if (array_key_exists($cbteTipo, $invoices)) {
-            return $invoices[$cbteTipo];
-        }
-
-        return null;
-    }
-
-    protected function typeNotaDebito(array $afip_data)
-    {
-        $invoices = [
-            1 => 2,
-            6 => 7,
-            11 => 12,
-            201 => 202,
-            206 => 207,
-            211 => 212,
-        ];
-
-        $cbteTipo = (int) $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'];
-
-        if (array_key_exists($cbteTipo, $invoices)) {
-            return $invoices[$cbteTipo];
-        }
-
-        return null;
-    } */
 
     private function getTipoComprobanteMapeado(mixed $afip_data, array $mapeo)
     {
@@ -281,45 +191,6 @@ class SaleInvoiceTransformer extends TransformerAbstract
             1 => 2, 6 => 7, 11 => 12, 201 => 202, 206 => 207, 211 => 212
         ]);
     }
-    /* protected function isNotaCredito(array $afip_data): bool
-    {
-        $invoices = [
-            3 => true,
-            8 => true,
-            13 => true,
-            203 => true,
-            208 => true,
-            213 => true,
-        ];
-
-        $invoiceAfipCode = (int) $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'];
-
-        if (array_key_exists($invoiceAfipCode, $invoices)) {
-            return $invoices[$invoiceAfipCode];
-        }
-
-        return false;
-    }
-
-    protected function isNotaDebito(array $afip_data): bool
-    {
-        $invoices = [
-            2 => true,
-            7 => true,
-            12 => true,
-            202 => true,
-            207 => true,
-            212 => true,
-        ];
-
-        $invoiceAfipCode = (int) $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'];
-
-        if (array_key_exists($invoiceAfipCode, $invoices)) {
-            return $invoices[$invoiceAfipCode];
-        }
-
-        return false;
-    } */
 
     private function checkTipoComprobante(mixed $afip_data, array $tipos): bool
     {

@@ -12,6 +12,7 @@ class MigrateAddressesData extends Command
 
     public function handle()
     {
+        ini_set('memory_limit', '512M');
         // Definir el tamaño del chunk
         $chunkSize = 1000;
 
@@ -22,7 +23,7 @@ class MigrateAddressesData extends Command
         // Procesar los registros en chunks
         DB::connection('vete')
             ->table('addresses')
-            ->orderBy('id') // Ordenar por ID para evitar problemas con chunks
+            ->orderBy('addressable_id') // Ordenar por ID para evitar problemas con chunks
             ->chunk($chunkSize, function ($addresses) {
                 $this->info("Processing a chunk of " . count($addresses) . " records...");
 
@@ -33,17 +34,17 @@ class MigrateAddressesData extends Command
                     $dataToInsert[] = [
                         'code' => $address->code,
                         'country_id' => $address->country_id,
-                        'state_id' => $address->province_id, // Cambio de nombre
+                        'state_id' => $address->province_id,
                         'city' => $address->city,
-                        'street' => $address->address, // Cambio de nombre
-                        'number' => (int)$address->number, // Cambio de tipo
+                        'street' => $address->address,
+                        'number' => (int)$address->number,
                         'cp' => $address->cp,
                         'obs' => $address->obs,
-                        'geocoder' => json_encode($address->geocoder), // Cambio de tipo
-                        'addressable_id' => $address->addressable_id + 21,
+                        'geocoder' => json_encode($address->geocoder),
+                        'addressable_id' => $address->addressable_id + 31592,
                         'addressable_type' => $address->addressable_type,
                         'type_id' => $address->type_id,
-                        'active' => $address->status_id == 1 ? 1 : 0, // Cambio de nombre y lógica
+                        'active' => $address->status_id == 1 ? 1 : 0,
                         'between_streets' => $address->between_streets,
                         'created_at' => $address->created_at,
                         'updated_at' => $address->updated_at,
@@ -52,6 +53,8 @@ class MigrateAddressesData extends Command
 
                 // Insertar el chunk en la nueva base de datos
                 DB::connection('mysql')->table('addresses')->insert($dataToInsert);
+                unset($dataToInsert);
+                gc_collect_cycles();
             });
 
         $this->info('Addresses data migrated successfully.');
