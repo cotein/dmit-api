@@ -19,7 +19,7 @@ class EmailVerificationController extends Controller
 
     public function verify_email(Request $request)
     {
-        header('Access-Control-Allow-Origin: http://localhost:5173');
+        header('Access-Control-Allow-Origin: https://facturador.dmit.ar');
         header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
         header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
