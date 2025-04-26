@@ -50,6 +50,7 @@ class SaleInvoicePrintTransformer extends TransformerAbstract
             $this->getCurrentIteration(),
             "{$si->customer->name} {$si->customer->last_name}",
             $si->customer->afip_number,
+            $si->customer->afipInscription->name,
             $si->voucher->name,
             Carbon::parse($si->cbte_fch)->format('d-m-Y'),
             ZeroLeft::print($si->pto_vta, 4) . ' - ' . ZeroLeft::print($si->cbte_desde, 8),
