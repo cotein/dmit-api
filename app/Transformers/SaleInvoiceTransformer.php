@@ -57,9 +57,9 @@ class SaleInvoiceTransformer extends TransformerAbstract
             Log::info('');
 
             return [
-                'id' => is_null($item->product->id) ? '' : $item->product->id,
+                'id' => is_null($item->product) ? '' : $item->product->id,
                 'key' => $item->id,
-                'name' => is_null($item->product->name) ? '' : $item->product->name,
+                'name' => is_null($item->product) ? '' : $item->product->name,
                 'quantity' => $item->quantity,
                 'neto_import' => $item->neto_import,
                 'iva_import' => $item->iva_import,
