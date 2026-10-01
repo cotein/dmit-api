@@ -37,7 +37,7 @@ class PaymentController extends Controller
 
     public function show(Payment $payment): JsonResponse
     {
-        // El route-model binding ya está filtrado por el Global Scope
+        // El binding de ruta respeta el global scope de empresa (App\Src\Scopes\CompanyScope).
         $payment->load(['order', 'paymentMethod']);
         return fractal($payment, new PaymentTransformer())->parseIncludes(request('include', 'order,paymentMethod'))->respond();
     }
