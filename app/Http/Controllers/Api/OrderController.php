@@ -72,7 +72,7 @@ class OrderController extends Controller
         return fractal()
             ->item($order)
             ->transformWith(new OrderTransformer())
-            ->parseIncludes(request('include', 'customer,items,user')) // Incluye casi todo por defecto
+            ->parseIncludes(request('include', 'customer,items')) // 'user' queda disponible vía ?include=user
             ->respond();
     }
 

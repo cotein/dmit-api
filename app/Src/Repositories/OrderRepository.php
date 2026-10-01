@@ -30,10 +30,11 @@ class OrderRepository
     public function findById(int $id): ?Order
     {
         return $this->model->with([
-            'customer', 
-            'user', 
-            'items', 
-            'items.product'
+            'customer',
+            'user',
+            'status',
+            'items',
+            'items.product',
         ])->find($id);
     }
 

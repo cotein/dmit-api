@@ -10,39 +10,47 @@ class OrderTransformer extends TransformerAbstract
     protected array $availableIncludes = [
         'customer',
         'items',
-        'user'
+        'user',
     ];
 
-    // ... (el método transform no cambia) ...
     public function transform(Order $order)
     {
         return [
             'id' => (int) $order->id,
             'code' => $order->code,
-            'delivery_date' => $order->delivery_date ? $order->delivery_date->format('Y-m-d') : null,
+            'status_id' => $order->status_id,
+            'status' => $order->relationLoaded('status') ? optional($order->status)->name : null,
+            'user_id' => $order->user_id,
+            'delivery_date' => $order->delivery_date?->format('Y-m-d'),
             'total' => (float) $order->total,
-            'created_at' => $order->created_at->toDateTimeString(),
+            'created_at' => $order->created_at?->toDateTimeString(),
         ];
     }
 
-    // ... (includeCustomer no cambia) ...
     public function includeCustomer(Order $order)
     {
-        // ...
+        if (! $order->customer) {
+            return $this->null();
+        }
+
+        return $this->item($order->customer, new CustomerListTransformer(), 'customer');
     }
 
     /**
      * Incluir los Items del pedido.
+     * La relación del modelo es Order::items() (no "orderItems").
      */
     public function includeItems(Order $order)
     {
-        // La magia ahora ocurre en OrderItemTransformer con $defaultIncludes
-        return $this->collection($order->orderItems, new OrderItemTransformer(), 'items'); // <-- CAMBIO AQUÍ (se quitó el ->parseIncludes)
+        return $this->collection($order->items, new OrderItemTransformer(), 'items');
     }
-    
-    // ... (includeUser no cambia) ...
+
     public function includeUser(Order $order)
     {
-        // ...
+        if (! $order->user) {
+            return $this->null();
+        }
+
+        return $this->item($order->user, new UserTransformer(), 'user');
     }
 }

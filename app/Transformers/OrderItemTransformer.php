@@ -8,11 +8,14 @@ use League\Fractal\TransformerAbstract;
 class OrderItemTransformer extends TransformerAbstract
 {
     /**
-     * Lista de relaciones que se incluyen POR DEFECTO.
+     * El producto se expone como include OPCIONAL (?include=items.product).
+     * No va por defecto: ProductTransformer asume que el producto tiene IVA y
+     * lista de precios, y no queremos que /api/orders dependa de eso.
+     *
      * @var array
      */
-    protected array $defaultIncludes = [ // <-- CAMBIO AQUÍ
-        'product'
+    protected array $availableIncludes = [
+        'product',
     ];
 
     public function transform(OrderItem $item)
