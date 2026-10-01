@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Src\Traits\BelongsToCompanyTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
-    use HasFactory;
+    use HasFactory, BelongsToCompanyTrait;
 
     /**
      * El nombre de la tabla asociada con el modelo, ya que no sigue la convención de Laravel.
