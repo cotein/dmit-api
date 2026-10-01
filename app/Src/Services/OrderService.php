@@ -5,6 +5,8 @@ namespace App\Src\Services;
 use App\Models\Order;
 use App\Src\Repositories\OrderRepository;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Exception;
 
 class OrderService
@@ -27,7 +29,7 @@ class OrderService
         // nunca la que manda el cliente.
         $orderData = collect($data)->except(['items', 'company_id'])->toArray();
         $orderData['user_id'] = $orderData['user_id'] ?? auth()->id();
-        $itemsData = collect($data)->get('items', []);
+        $itemsData = $this->normalizeItems(collect($data)->get('items', []));
 
         DB::beginTransaction();
         try {
@@ -61,6 +63,7 @@ class OrderService
     {
         $orderData = collect($data)->except(['items', 'company_id'])->toArray();
         $itemsData = collect($data)->get('items');
+        $itemsData = is_null($itemsData) ? null : $this->normalizeItems($itemsData);
         
         DB::beginTransaction();
         try {
@@ -95,17 +98,65 @@ class OrderService
     }
     
     /**
+     * Recalcula en el servidor el neto, el descuento, el IVA y el total de cada ítem.
+     * El total nunca debe venir decidido por el cliente.
+     *
+     * Con orders.strict_totals = false (default) las diferencias se registran como
+     * warning; con true, el pedido se rechaza con 422.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, array<string, mixed>>
+     */
+    private function normalizeItems(array $items): array
+    {
+        return collect($items)->map(function (array $item): array {
+            $quantity = (float) $item['quantity'];
+            $unitPrice = (float) $item['unit_price'];
+            $ivaPercentage = (float) $item['iva_percentage'];
+            $discountPercentage = (float) ($item['discount_percentage'] ?? 0);
+
+            $neto = round($quantity * $unitPrice, 2);
+            $discountImport = round($neto * $discountPercentage / 100, 2);
+            $base = round($neto - $discountImport, 2);
+            $ivaImport = round($base * $ivaPercentage / 100, 2);
+            $total = round($base + $ivaImport, 2);
+
+            if (isset($item['total']) && abs((float) $item['total'] - $total) > 0.01) {
+                $context = [
+                    'product_id' => $item['product_id'] ?? null,
+                    'recibido' => (float) $item['total'],
+                    'esperado' => $total,
+                ];
+
+                if (config('orders.strict_totals')) {
+                    throw ValidationException::withMessages([
+                        'items' => 'El total del producto '.($item['product_id'] ?? '?')
+                            ." no coincide: recibido {$context['recibido']}, esperado {$context['esperado']}.",
+                    ]);
+                }
+
+                Log::warning('Orden con total de ítem inconsistente', $context);
+            }
+
+            return array_merge($item, [
+                'neto_import' => $base,
+                'discount_import' => $discountImport,
+                'iva_import' => $ivaImport,
+                'total' => $total,
+            ]);
+        })->all();
+    }
+
+    /**
      * Recalcula el total de un pedido basándose en la suma de sus ítems.
      */
     public function recalculateOrderTotal(Order $order): void
     {
         // Forzar la recarga de la relación por si se acaba de modificar
-        $order->load('items'); 
-
-        $total = $order->items->sum('total');
+        $order->load('items');
 
         // Aquí podrías sumar otros costos como 'aditional_pay_method' si aplica
-        $order->total = $total;
+        $order->total = round((float) $order->items->sum('total'), 2);
         $order->save();
     }
 }

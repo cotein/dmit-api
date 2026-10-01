@@ -11,6 +11,8 @@ use App\Src\Services\OrderService;
 use App\Transformers\OrderTransformer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -53,7 +55,11 @@ class OrderController extends Controller
                 ->parseIncludes(['customer', 'items'])
                 ->respond(Response::HTTP_CREATED);
 
+        } catch (ValidationException $e) {
+            throw $e; // 422 con el detalle, no un 500 genérico
         } catch (\Exception $e) {
+            Log::error('Error al crear el pedido', ['error' => $e->getMessage()]);
+
             return response()->json(['message' => 'Error al crear el pedido.'], 500);
         }
     }
@@ -90,7 +96,11 @@ class OrderController extends Controller
                 ->parseIncludes(['customer', 'items'])
                 ->respond();
 
+        } catch (ValidationException $e) {
+            throw $e; // 422 con el detalle, no un 500 genérico
         } catch (\Exception $e) {
+            Log::error('Error al actualizar el pedido', ['error' => $e->getMessage()]);
+
             return response()->json(['message' => 'Error al actualizar el pedido.'], 500);
         }
     }
