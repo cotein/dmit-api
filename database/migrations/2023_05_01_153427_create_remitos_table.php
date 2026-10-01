@@ -15,7 +15,7 @@ class CreateRemitosTable extends Migration
     public function up()
     {
         Schema::create('remitos', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->timestamps();
             $table->integer('pedido_cliente_id')->unsigned()->nullable();
             $table->string('code', 191)->nullable();

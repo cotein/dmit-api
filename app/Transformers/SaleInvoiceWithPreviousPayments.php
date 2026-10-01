@@ -51,14 +51,14 @@ class SaleInvoiceWithPreviousPayments extends TransformerAbstract
     {
         return $si->items->map(function ($item) {
             return [
-                'id' => $item->product->id,
+                'id' => $item->product ? $item->product->id : null,
                 'key' => $item->id,
-                'name' => $item->product->name,
+                'name' => $item->product ? $item->product->name : null,
                 'quantity' => $item->quantity,
                 'neto_import' => $item->neto_import,
                 'iva_import' => $item->iva_import,
-                'iva_afip_code' => $item->iva->code,
-                'iva_id' => $item->iva->id,
+                'iva_afip_code' => $item->iva ? $item->iva->code : null,
+                'iva_id' => $item->iva ? $item->iva->id : null,
                 'unit_price' => $item->unit_price,
                 'discount_percentage' => $item->discount_percentage,
                 'discount_import' => $item->discount_import,
@@ -100,17 +100,17 @@ class SaleInvoiceWithPreviousPayments extends TransformerAbstract
 
     protected function concepto(array $afip_data): int
     {
-        return $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Concepto'];
+        return $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['Concepto'] ?? 1;
     }
 
     protected function comprAsociado(array $afip_data): array
     {
         return [
-            'Tipo' => $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'],
-            'PtoVta' => $afip_data['FECAESolicitarResult']['FeCabResp']['PtoVta'],
-            'Nro' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteDesde'],
-            'Cuit' => $afip_data['FECAESolicitarResult']['FeCabResp']['Cuit'], //emisor
-            'CbteFch' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteFch'],
+            'Tipo' => $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'] ?? null,
+            'PtoVta' => $afip_data['FECAESolicitarResult']['FeCabResp']['PtoVta'] ?? null,
+            'Nro' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteDesde'] ?? null,
+            'Cuit' => $afip_data['FECAESolicitarResult']['FeCabResp']['Cuit'] ?? null,
+            'CbteFch' => $afip_data['FECAESolicitarResult']['FeDetResp']['FECAEDetResponse'][0]['CbteFch'] ?? null,
         ];
     }
 
@@ -131,7 +131,7 @@ class SaleInvoiceWithPreviousPayments extends TransformerAbstract
             212 => 213,
         ];
 
-        $cbteTipo = (int) $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'];
+        $cbteTipo = (int) ($afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'] ?? 0);
 
         if (array_key_exists($cbteTipo, $invoices)) {
             return $invoices[$cbteTipo];
@@ -151,7 +151,7 @@ class SaleInvoiceWithPreviousPayments extends TransformerAbstract
             211 => 212,
         ];
 
-        $cbteTipo = (int) $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'];
+        $cbteTipo = (int) ($afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'] ?? 0);
 
         if (array_key_exists($cbteTipo, $invoices)) {
             return $invoices[$cbteTipo];
@@ -171,7 +171,7 @@ class SaleInvoiceWithPreviousPayments extends TransformerAbstract
             213 => true,
         ];
 
-        $invoiceAfipCode = (int) $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'];
+        $invoiceAfipCode = (int) ($afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'] ?? 0);
 
         if (array_key_exists($invoiceAfipCode, $invoices)) {
             return $invoices[$invoiceAfipCode];
@@ -191,7 +191,7 @@ class SaleInvoiceWithPreviousPayments extends TransformerAbstract
             212 => true,
         ];
 
-        $invoiceAfipCode = (int) $afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'];
+        $invoiceAfipCode = (int) ($afip_data['FECAESolicitarResult']['FeCabResp']['CbteTipo'] ?? 0);
 
         if (array_key_exists($invoiceAfipCode, $invoices)) {
             return $invoices[$invoiceAfipCode];
@@ -277,9 +277,9 @@ class SaleInvoiceWithPreviousPayments extends TransformerAbstract
                 'last_name' => $si->company->last_name,
                 'fantasy_name' => $si->company->fantasy_name,
                 'cuit' => $si->company->afip_number,
-                'afipInscription' => $si->company->afipInscription->name,
-                'afipInscription_id' => $si->company->afipInscription->id,
-                'afipDocument' => $si->company->afipDocument->name,
+                'afipInscription' => $si->company->afipInscription ? $si->company->afipInscription->name : null,
+                'afipInscription_id' => $si->company->afipInscription ? $si->company->afipInscription->id : null,
+                'afipDocument' => $si->company->afipDocument ? $si->company->afipDocument->name : null,
                 'activity_init' => $si->company->activity_init,
                 'iibb' => $si->company->iibb_conv,
                 /* 'address' => [
@@ -299,10 +299,10 @@ class SaleInvoiceWithPreviousPayments extends TransformerAbstract
                 'last_name' => $si->customer->last_name,
                 'fantasy_name' => $si->customer->fantasy_name,
                 'cuit' => $si->customer->afip_number,
-                'afipInscription' => $si->customer->afipInscription->name,
-                'afipInscription_id' => $si->customer->afipInscription->id,
-                'afipDocument' => $si->customer->afipDocument->name,
-                'afipDocTipo' => $si->customer->afipDocument->afip_code,
+                'afipInscription' => $si->customer->afipInscription ? $si->customer->afipInscription->name : null,
+                'afipInscription_id' => $si->customer->afipInscription ? $si->customer->afipInscription->id : null,
+                'afipDocument' => $si->customer->afipDocument ? $si->customer->afipDocument->name : null,
+                'afipDocTipo' => $si->customer->afipDocument ? $si->customer->afipDocument->afip_code : null,
                 'address' => $this->address($si->customer)
             ],
 

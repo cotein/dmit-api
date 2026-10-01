@@ -5,14 +5,14 @@ namespace App\Src\Strategy\InvoiceStatus;
 use App\Models\SaleInvoices;
 use App\Src\Constantes;
 use Illuminate\Support\Collection;
-use PHPUnit\TextUI\Configuration\Constant;
 
 class InvoiceStatusNotaCreditoStrategy implements InvoiceStatusStrategyInterface
 {
     public function setStatus($data, $invoice = null): int
     {
-
-        return Constantes::ADEUDADA; //por ahora la dejo adeudada y se da de baja cuando se cancela la factura en un recibo
+        if ($invoice === null) {
+            return Constantes::ADEUDADA;
+        }
 
         $cbteAsoc = SaleInvoices::where('cbte_desde', $data['FECAEDetRequest']['CbtesAsoc'][0]['Nro'])->get()->first();
 
@@ -39,6 +39,8 @@ class InvoiceStatusNotaCreditoStrategy implements InvoiceStatusStrategyInterface
 
             return Constantes::ADEUDADA;
         }
+
+        return Constantes::ADEUDADA;
     }
 
     private function isSameAmount(SaleInvoices $invoice, Collection $products): bool

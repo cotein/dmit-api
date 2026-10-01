@@ -15,7 +15,7 @@ class CreateBankAccountsTable extends Migration
     public function up()
     {
         Schema::create('bank_accounts', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->integer('account_type_id')->unsigned()->nullable();
             $table->integer('bank_id')->unsigned()->nullable();
             $table->integer('money_id')->unsigned()->nullable();

@@ -46,10 +46,11 @@ class AfipPadronController extends Controller
 
     protected function getPadron($ws, User $user)
     {
-        if (!$user->company) {
+        $company = $user->companies()->first();
+        if (!$company) {
             return AfipWebService::findWebService($ws, Constantes::PRODUCTION_ENVIRONMENT, Constantes::DIEGO_BARRUETA_CUIT, 1, 1);
         }
-        return AfipWebService::findWebService($ws, Constantes::PRODUCTION_ENVIRONMENT, $user->company->afip_number, $user->company->id, $user->id);
+        return AfipWebService::findWebService($ws, Constantes::PRODUCTION_ENVIRONMENT, $company->afip_number, $company->id, $user->id);
     }
 
     protected function getPersonaData($ws, $cuit)

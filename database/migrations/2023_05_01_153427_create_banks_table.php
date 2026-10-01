@@ -15,7 +15,7 @@ class CreateBanksTable extends Migration
     public function up()
     {
         Schema::create('banks', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->integer('code')->nullable();
             $table->string('name', 100)->nullable();
             $table->timestamps();

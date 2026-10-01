@@ -15,7 +15,7 @@ class CreateSalesInvoicesTable extends Migration
     public function up()
     {
         Schema::create('sale_invoices', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->integer('company_id')->unsigned()->nullable();
             $table->integer('customer_id')->unsigned()->nullable();
             $table->integer('voucher_id')->unsigned()->nullable();

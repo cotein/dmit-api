@@ -14,6 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use OwenIt\Auditing\Contracts\Auditable;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -92,29 +93,8 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMed
         return false;
     }
 
-    /* public function sendEmailVerificationNotification()
-    {
-        $baseUrl = env('CORS_ALLOW_ORIGIN');
-
-        $verificationUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            Carbon::now()->addMinutes(60),
-            [
-                'id' => $this->getKey(),
-                'hash' => sha1($this->email),
-            ],
-            false
-        );
-        $verificationUrl = $baseUrl . parse_url($verificationUrl, PHP_URL_PATH) . '?' . parse_url($verificationUrl, PHP_URL_QUERY);
-
-        $data['name'] = $this->name;
-
-        Mail::to($this->email)->send(new ConfirmEmailMail($data, $verificationUrl));
-    } */
-
     public function sendEmailVerification($email, $token)
     {
-
         $client = new \GuzzleHttp\Client();
 
         $resul = $client->postAsync(env('EMAIL_SENDER_URL') . '/api/email-sender/register-user', [
@@ -123,19 +103,35 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMed
                 'token' => $token,
             ],
         ]);
-        // Opcionalmente, puedes manejar la respuesta o errores
+
         $resul->then(
             function ($response) {
-                // Manejar la respuesta
                 Log::info('Email sent successfully ' . $response->getBody());
-                echo 'Email sent successfully';
             },
             function ($exception) {
-                // Manejar el error
-                echo 'Failed to send email: ' . $exception->getMessage();
+                Log::error('Failed to send email: ' . $exception->getMessage());
             }
         );
-        // Ejecutar la promesa
+
         $resul->wait();
+    }
+
+    // En App\Models\User.php
+
+
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            fn (string $value) => $value,
+            fn (string $value) => strtoupper($value),
+        );
+    }
+
+    protected function lastName(): Attribute
+    {
+        return Attribute::make(
+            fn (string $value) => $value,
+            fn (string $value) => strtoupper($value),
+        );
     }
 }

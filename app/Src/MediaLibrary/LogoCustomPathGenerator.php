@@ -10,7 +10,7 @@ class LogoCustomPathGenerator implements PathGenerator
     public function getPath(Media $media): string
     {
         // Usa una propiedad personalizada del modelo para generar la ruta
-        return 'companies/' . $media->model->afip_number . '/';
+        return 'companies/' . ($media->model ? $media->model->afip_number : 'default') . '/';
     }
 
     public function getPathForConversions(Media $media): string

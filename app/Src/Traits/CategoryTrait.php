@@ -36,8 +36,6 @@ trait CategoryTrait
                     'children' => [],
                 ]);
             } else {
-                dd($category, $cat, 'pp');
-
                 $this->categoriesChildren($category['children'], $cat);
             }
         }

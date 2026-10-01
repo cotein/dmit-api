@@ -77,7 +77,7 @@ class ReceiptTransformer extends TransformerAbstract
      */
     public function transform(Receipt $r)
     {
-        $logo = $r->company->getMedia('logos')->first();
+        $logo = $r->company ? $r->company->getMedia('logos')->first() : null;
 
         if ($logo) {
             $logo_base64 = $this->convertImageToBase64($logo);
@@ -86,7 +86,7 @@ class ReceiptTransformer extends TransformerAbstract
         }
         return [
 
-            'company' => [
+            'company' => $r->company ? [
                 'name' => $r->company->name,
                 'cuit' => $r->company->number,
                 'address' => $this->address($r->company),
@@ -95,7 +95,7 @@ class ReceiptTransformer extends TransformerAbstract
                 'email' => $r->company->email,
                 'web' => $r->company->web,
                 'logo_base64' => $logo_base64,
-            ],
+            ] : [],
 
             'receipt' => [
                 'number' => $r->number,
@@ -105,7 +105,7 @@ class ReceiptTransformer extends TransformerAbstract
                 'total' => $r->total,
             ],
 
-            'customer' => [
+            'customer' => $r->customer ? [
                 'id' => $r->customer_id,
                 'name' => $r->customer->name,
                 'lastname' => $r->customer->last_name,
@@ -113,7 +113,7 @@ class ReceiptTransformer extends TransformerAbstract
                 'phone' => $r->customer->phone,
                 'address' => $r->customer->address,
                 'afip_number' => $r->customer->afip_number,
-            ],
+            ] : [],
             'documentsCancelation' => $this->documents_cancelation($r),
             'invoicesToCancel' => $this->getInvoices($r),
         ];

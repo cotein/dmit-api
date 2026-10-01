@@ -15,7 +15,7 @@ class CreateCustomersTable extends Migration
     public function up()
     {
         Schema::create('customers', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->string('name', 100)->nullable();
             $table->string('last_name', 100)->nullable();
             $table->string('fantasy_name', 100)->nullable();
@@ -28,6 +28,7 @@ class CreateCustomersTable extends Migration
             $table->text('afip_data')->nullable();
             $table->timestamps();
             $table->string('cell_phone', 191)->nullable();
+            $table->string('phone', 191)->nullable();
             $table->string('phone_1', 191)->nullable();
             $table->string('phone_2', 191)->nullable();
             $table->string('phone_3', 191)->nullable();

@@ -38,6 +38,8 @@ class PriceListRepository
             if ($errorCode == 1062) {
                 throw new Exception('La lista de precios que intenta ingresar ya se encuentra registrada');
             }
+
+            throw $e;
         }
     }
 

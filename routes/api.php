@@ -23,6 +23,8 @@ use App\Http\Controllers\Api\AfipInscriptionController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\AfipFacturaElectronicaController;
 use App\Http\Controllers\Api\DashBoardController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\PasswordResetController;
 
 Route::get('updates', [DashBoardController::class, 'updates']);
@@ -35,6 +37,15 @@ Route::post('email/resend', [EmailVerificationController::class, 'resend'])->nam
 Route::post('password/email', [AuthController::class, 'forgotPassword']);
 Route::post('forgotPassword/reset/code', [PasswordResetController::class, 'passwordResetCode']);
 Route::post('forgotPassword/resetPassword', [PasswordResetController::class, 'resetPassword']);
+
+Route::get('status', function () {
+    return response()->json([
+        'data' => [
+            'message' => '¡API Conectada y Operativa desde el contenedor Docker!',
+            'timestamp' => now()
+        ]
+    ]);
+});
 
 Route::middleware(['auth:api'])->group(function () {
 
@@ -71,6 +82,8 @@ Route::middleware(['auth:api'])->group(function () {
             'voucher' => AfipVoucherController::class,
             'bank' => BankController::class,
             'receipt' => ReceiptController::class,
+            'orders'=> OrderController::class,
+            'payments' => PaymentController::class
         ]);
     });
 });

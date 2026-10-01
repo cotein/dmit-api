@@ -15,7 +15,7 @@ class CreateRemitoItemsTable extends Migration
     public function up()
     {
         Schema::create('remito_items', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->integer('remito_id')->unsigned()->nullable();
             $table->float('quantity', 10)->unsigned()->nullable();
             $table->string('product_id', 191)->nullable();

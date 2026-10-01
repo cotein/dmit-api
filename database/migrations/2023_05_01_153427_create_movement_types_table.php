@@ -15,7 +15,7 @@ class CreateMovementTypesTable extends Migration
     public function up()
     {
         Schema::create('movement_types', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->string('name', 191)->nullable();
             $table->timestamps();
         });

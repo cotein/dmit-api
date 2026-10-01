@@ -59,8 +59,8 @@ class CustomerCuentaCorrienteTransformer extends TransformerAbstract
         return [
             'id' => $cc->id,
             'number' => $cc->number,
-            'company' => $cc->company->name,
-            'customer' => $cc->customer->name,
+            'company' => $cc->company ? $cc->company->name : null,
+            'customer' => $cc->customer ? $cc->customer->name : null,
             'voucher' => $this->cuotaablesVoucher($cc),
             'date' => $this->cuotaablesDate($cc),
             'sale' => $cc->sale,

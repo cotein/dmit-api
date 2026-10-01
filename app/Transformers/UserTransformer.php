@@ -27,13 +27,15 @@ class UserTransformer extends TransformerAbstract
 
     private function setCompanyData($user): array
     {
+        $company = $user->companies()->first();
+
         return [
-            'id' => $user->company->id,
-            'cuit' => $user->company->afip_number,
-            'inscription' => $user->company->afip_inscription_id,
-            'document' => $user->company->afip_document_id,
-            'environment' => $user->company->environment,
-            'ptoVtaFe' => $user->company->pto_vta_fe
+            'id' => $company ? $company->id : null,
+            'cuit' => $company ? $company->afip_number : null,
+            'inscription' => $company ? $company->afip_inscription_id : null,
+            'document' => $company ? $company->afip_document_id : null,
+            'environment' => $company ? $company->environment : null,
+            'ptoVtaFe' => $company ? $company->pto_vta_fe : null
         ];
     }
     /**

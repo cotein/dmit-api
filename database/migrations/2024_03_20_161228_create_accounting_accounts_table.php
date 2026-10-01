@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('accounting_accounts', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->integer('account')->unsigned()->nullable();
             $table->string('imputable')->nullable();
             $table->string('name')->nullable();

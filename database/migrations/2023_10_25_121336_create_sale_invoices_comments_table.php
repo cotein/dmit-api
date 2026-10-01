@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('sale_invoices_comments', function (Blueprint $table) {
-            $table->increments('id');
+            $table->id();
             $table->integer('company_id')->unsigned()->nullable();
             $table->integer('sale_invoice_id')->unsigned()->nullable();
             $table->longText('comment');

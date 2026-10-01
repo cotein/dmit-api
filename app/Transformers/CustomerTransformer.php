@@ -37,15 +37,15 @@ class CustomerTransformer extends TransformerAbstract
             'name' => $customer->name,
             'last_name' => $customer->last_name,
             'afip_number' => $customer->afip_number,
-            'afip_inscription' => [
+            'afip_inscription' => $customer->afipInscription ? [
                 'id' => $customer->afipInscription->id,
                 'name' => $customer->afipInscription->name
-            ],
-            'afip_document' => [
+            ] : null,
+            'afip_document' => $customer->afipDocument ? [
                 'id' => $customer->afipDocument->id,
                 'name' => $customer->afipDocument->name,
                 'afip_code' => $customer->afipDocument->afip_code
-            ],
+            ] : null,
             'status' => ($customer->active) ? 'Activo' : 'Inactivo',
 
         ];

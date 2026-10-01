@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Src\Constantes as Cosntantes;
 use App\Src\Constantes;
 
 class SaleInvoices extends Model
@@ -97,6 +96,6 @@ class SaleInvoices extends Model
 
     public function isNotaCredito()
     {
-        return in_array($this->voucher_id, Cosntantes::IS_NOTA_CREDITO);
+        return in_array($this->voucher_id, Constantes::IS_NOTA_CREDITO);
     }
 }
