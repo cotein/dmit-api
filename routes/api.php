@@ -30,8 +30,8 @@ use App\Http\Controllers\PasswordResetController;
 Route::get('updates', [DashBoardController::class, 'updates']);
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('register/check-cuit', [RegisterController::class, 'checkCuit']);
-Route::post('login', [AuthController::class, 'login']);
-Route::post('auth/google', [AuthController::class, 'googleLogin']);
+Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+Route::post('auth/google', [AuthController::class, 'googleLogin'])->middleware('throttle:10,1');
 Route::get('verify-email', [EmailVerificationController::class, 'verify_email'])->name('verification.verify'); // Make sure to keep this as your route name
 Route::post('email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
 Route::post('password/email', [AuthController::class, 'forgotPassword']);

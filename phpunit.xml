@@ -26,6 +26,9 @@
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
+        <!-- .env apunta VIEW_COMPILED_PATH a /dev/null: en tests eso impide renderizar
+             hasta la página de error y tapa el error real. -->
+        <env name="VIEW_COMPILED_PATH" value="storage/framework/views"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
     </php>
 </phpunit>
