@@ -18,7 +18,6 @@ class Order extends Model
      */
     protected $table = 'orders';
 
-    protected $appends = ['status'];
     /**
      * Los atributos que se pueden asignar masivamente.
      *
@@ -133,16 +132,9 @@ class Order extends Model
         return $this->hasMany(OrderItem::class, 'order_id');
     }
 
-    public function status()
+    public function status(): BelongsTo
     {
         // Eloquent buscará la clave foránea `status_id` en la tabla `orders`.
         return $this->belongsTo(Status::class, 'status_id');
-    }
-
-    public function getStatusAttribute()
-    {
-        // Usamos la relación 'status()' que ya definimos para obtener el modelo relacionado
-        // y devolvemos el atributo 'name' de ese modelo.
-        return $this->status()->first()->name;
     }
 }
