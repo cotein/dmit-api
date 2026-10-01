@@ -62,7 +62,7 @@ trait AddressTrait
             'city' => $address->city,
             'street' => $address->street,
             'cp' => $address->cp,
-            'state' => AfipState::where('id', $address->state_id)->first()->name,
+            'state' => optional(AfipState::where('id', $address->state_id)->first())->name,
         ];
     }
 }
