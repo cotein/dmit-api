@@ -24,9 +24,13 @@ class SendVerificationEmailJob implements ShouldQueue
 
     public function handle(): void
     {
+        // La URL sale de config (env EMAIL_SENDER_URL): antes estaba hardcodeada
+        // al host interno de Docker y el registro fallaba con cURL error 6.
+        $baseUrl = rtrim((string) config('services.email_sender.url'), '/');
+
         try {
-            $client = new \GuzzleHttp\Client();
-            $response = $client->post('http://dmit_email_sender_app:3000/api/email-sender/user-email-verification', [
+            $client = new \GuzzleHttp\Client(['timeout' => 10]);
+            $response = $client->post($baseUrl . '/api/email-sender/user-email-verification', [
                 'json' => [
                     'to' => $this->email,
                     'name' => $this->name,
@@ -34,12 +38,14 @@ class SendVerificationEmailJob implements ShouldQueue
                 ],
             ]);
 
-            if ($response->getStatusCode() !== 201) {
+            // El microservicio responde 200 cuando envía: comparar contra 201
+            // generaba un log de error en cada envío exitoso.
+            if ($response->getStatusCode() >= 400) {
                 Log::error('Error en el servicio de envío de correo: ' . $response->getBody());
             } else {
                 Log::info('Correo de verificación despachado para: ' . $this->email);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Fallo el job SendVerificationEmailJob: ' . $e->getMessage());
         }
     }

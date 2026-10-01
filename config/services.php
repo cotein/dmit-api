@@ -56,4 +56,11 @@ return [
         'redirect' => env('INSTAGRAM_REDIRECT_URI')
     ],
 
+    // Microservicio de correo (NestJS). Antes la URL vivía hardcodeada en
+    // App\Jobs\SendVerificationEmailJob: se expone acá y se lee con config()
+    // porque env() fuera de config/ devuelve null cuando corre `config:cache`.
+    'email_sender' => [
+        'url' => env('EMAIL_SENDER_URL', 'http://dmit_email_sender_app:3000'),
+    ],
+
 ];
