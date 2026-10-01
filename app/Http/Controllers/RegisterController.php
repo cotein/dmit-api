@@ -27,14 +27,18 @@ class RegisterController extends Controller
         try {
             // Usar una transacción de DB es una excelente práctica. ¡Bien hecho!
             $user = DB::transaction(function () use ($validatedData, $request) {
-                
+
+                // Las reglas del FormRequest son anidadas (user.*), así que validated()
+                // devuelve ['user' => [...]]: leer las claves planas rompía el registro
+                // con "Undefined array key name".
+                $userData = $validatedData['user'];
+
                 $user = User::create([
-                    'name' => $validatedData['name'],
-                    // Asumimos que el form request también valida 'lastName'
-                    'last_name' => $request->user['lastName'], // Ajustar según el FormRequest
-                    'email' => $validatedData['email'],
-                    'password' => Hash::make($validatedData['password']),
-                    'type_user_id' => $this->determineUserType($validatedData['email']),
+                    'name' => $userData['name'],
+                    'last_name' => $userData['lastName'],
+                    'email' => $userData['email'],
+                    'password' => Hash::make($userData['password']),
+                    'type_user_id' => $this->determineUserType($userData['email']),
                 ]);
 
                 // Generar token para la verificación de email
@@ -42,7 +46,7 @@ class RegisterController extends Controller
                 Cache::put('verification_token_' . $token, $user->id, now()->addHours(1));
 
                 // Despachar el Job para que se ejecute en segundo plano
-                SendVerificationEmailJob::dispatch($user->email, $user->name, $token);
+                SendVerificationEmailJob::dispatch($user->email, $user->name, $token)->afterCommit();
 
                 activity()
                     ->causedBy($user)
