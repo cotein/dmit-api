@@ -23,7 +23,9 @@ return new class extends Migration
             $table->foreignId('status_id')->nullable()->constrained('statuses'); // Asumiendo que tienes una tabla 'order_statuses'
             $table->foreignId('user_id')->nullable()->constrained('users');
             $table->foreignId('sale_invoice_id')->nullable()->constrained('sale_invoices');
-            $table->foreignId('voucher_id')->default(101)->constrained('vouchers'); // Asumiendo tabla 'vouchers'
+            // Sin default: el default(101) apuntaba a un voucher inexistente y hacía
+            // fallar el INSERT (FK 1452). El comprobante se define al facturar.
+            $table->foreignId('voucher_id')->nullable()->constrained('vouchers');
             $table->foreignId('parent_id')->nullable()->constrained('orders'); // Relación a sí misma
             $table->foreignId('is_editing_by_user')->nullable()->constrained('users');
 
