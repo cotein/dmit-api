@@ -32,8 +32,13 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMed
      */
     protected $fillable = [
         'name',
+        'last_name',
         'email',
         'password',
+        // El registro los manda en User::create: sin esto Eloquent los descartaba
+        // en silencio y el usuario quedaba sin apellido y con el type_user_id
+        // por defecto de la tabla (1 = USER_ROOT).
+        'type_user_id',
     ];
 
     /**
