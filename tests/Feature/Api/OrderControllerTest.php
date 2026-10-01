@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -17,6 +18,8 @@ class OrderControllerTest extends TestCase
 
     protected User $user;
 
+    protected Company $company;
+
     /**
      * Prepara el entorno para cada test.
      * Se ejecuta antes de cada método de prueba.
@@ -24,7 +27,14 @@ class OrderControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        // El usuario tiene que pertenecer a una empresa: los pedidos están
+        // aislados por empresa (CompanyScope fail-closed) y un usuario sin
+        // empresas no ve ni opera ningún pedido.
+        $this->company = Company::factory()->create();
+
         $this->user = User::factory()->create();
+        $this->user->companies()->attach($this->company->id);
 
         // REEMPLAZA CUALQUIER OTRA FORMA DE AUTH (actingAs o Sanctum::actingAs) CON ESTA:
         Passport::actingAs($this->user);
@@ -154,9 +164,12 @@ class OrderControllerTest extends TestCase
      */
     public function test_it_can_update_an_order(): void
     {
-        // Arrange: Creamos un pedido existente
+        // Arrange: Creamos un pedido existente (de la empresa del usuario)
         $pendingStatus = \App\Models\Status::factory()->create(['name' => 'pending']);
-        $order = Order::factory()->create(['status_id' => $pendingStatus->id]);
+        $order = Order::factory()->create([
+            'status_id' => $pendingStatus->id,
+            'company_id' => $this->company->id,
+        ]);
 
         $completedStatus = \App\Models\Status::factory()->create(['name' => 'completed']);
         $updateData = ['status_id' => $completedStatus->id];
@@ -165,13 +178,13 @@ class OrderControllerTest extends TestCase
         $response = $this->putJson("/api/orders/{$order->id}", $updateData);
 
         // Assert: Verificamos la respuesta y que la base de datos se haya actualizado
-       /*  $response->assertStatus(Response::HTTP_OK)
-                 ->assertJsonFragment(['status_id' => 1]);
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonFragment(['status_id' => $completedStatus->id]);
 
         $this->assertDatabaseHas('orders', [
             'id' => $order->id,
-            'status_id' => 1,
-        ]); */
+            'status_id' => $completedStatus->id,
+        ]);
     }
 
     /**
@@ -179,8 +192,8 @@ class OrderControllerTest extends TestCase
      */
     public function test_it_can_delete_an_order(): void
     {
-        // Arrange: Creamos un pedido
-        $order = Order::factory()->create();
+        // Arrange: Creamos un pedido de la empresa del usuario
+        $order = Order::factory()->create(['company_id' => $this->company->id]);
 
         // Act: Hacemos la petición DELETE
         $response = $this->deleteJson("/api/orders/{$order->id}");

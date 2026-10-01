@@ -23,7 +23,10 @@ class OrderService
      */
     public function createOrder(array $data): Order
     {
-        $orderData = collect($data)->except('items')->toArray();
+        // La empresa la fija BelongsToCompanyTrait desde el usuario autenticado:
+        // nunca la que manda el cliente.
+        $orderData = collect($data)->except(['items', 'company_id'])->toArray();
+        $orderData['user_id'] = $orderData['user_id'] ?? auth()->id();
         $itemsData = collect($data)->get('items', []);
 
         DB::beginTransaction();
@@ -56,7 +59,7 @@ class OrderService
      */
     public function updateOrder(Order $order, array $data): Order
     {
-        $orderData = collect($data)->except('items')->toArray();
+        $orderData = collect($data)->except(['items', 'company_id'])->toArray();
         $itemsData = collect($data)->get('items');
         
         DB::beginTransaction();
@@ -76,7 +79,7 @@ class OrderService
 
             DB::commit();
 
-            return $order->fresh(); // Retornar la instancia actualizada
+            return $order->fresh(['customer', 'items', 'user', 'status']); // Retornar la instancia actualizada
         } catch (Exception $e) {
             DB::rollBack();
             throw $e;
