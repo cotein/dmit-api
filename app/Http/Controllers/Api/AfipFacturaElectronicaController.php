@@ -121,7 +121,7 @@ class AfipFacturaElectronicaController extends Controller
      */
     private function solicitarComprobante(Request $request, array $invoiceData)
     {
-        $clonedRequest = $request->all();
+        $clonedRequest = $this->sinFechasDeServicioSiEsProducto($request->all());
 
         $date = Carbon::parse($request->FECAEDetRequest['CbteFch'])->format('Y-m-d');
 
@@ -194,6 +194,35 @@ class AfipFacturaElectronicaController extends Controller
             'arca' => $arca->toArray(),
             'arcaEvents' => $arca->mensajes(),
         ], 201);
+    }
+
+    /**
+     * Quita las fechas de servicio cuando el comprobante es de Concepto 1 (productos).
+     *
+     * ARCA rechaza el comprobante con 10049 ("FchVtoPago Debe informarse solo si Concepto es
+     * igual a 2 o 3") si se informan. El frontend las manda igual, porque el vencimiento de
+     * pago sale de la condición de venta, así que se limpian acá para que pueda autorizarse.
+     * Para las Facturas de Crédito Electrónica MiPyME (FCE) no aplica: ahí FchVtoPago es
+     * obligatorio incluso con Concepto 1, y ese flujo no pasa por este método.
+     *
+     * @param  array<string, mixed>  $request
+     * @return array<string, mixed>
+     */
+    private function sinFechasDeServicioSiEsProducto(array $request): array
+    {
+        $concepto = (int) ($request['FECAEDetRequest']['Concepto'] ?? 0);
+
+        if ($concepto !== 1) {
+            return $request;
+        }
+
+        unset(
+            $request['FECAEDetRequest']['FchServDesde'],
+            $request['FECAEDetRequest']['FchServHasta'],
+            $request['FECAEDetRequest']['FchVtoPago'],
+        );
+
+        return $request;
     }
 
     /**
