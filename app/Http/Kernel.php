@@ -2,7 +2,6 @@
 
 namespace App\Http;
 
-use App\Http\Middleware\Cors;
 use App\Http\Middleware\IsVerifyEmail;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
@@ -41,8 +40,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            //'cors'          => Cors::class,
-            // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            // CORS lo maneja \Illuminate\Http\Middleware\HandleCors (global, config/cors.php).
             \Illuminate\Routing\Middleware\ThrottleRequests::class . ':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],

@@ -74,13 +74,9 @@ class RegisterController extends Controller
 
     private function determineUserType(string $email): int
     {
-        $rootEmails = [
-            'diego.barrueta@gmail.com',
-            'marcelo.j.callo@gmail.com',
-            'marcelo.callao@piamondsa.com.ar'
-        ];
-
-        if (in_array($email, $rootEmails)) {
+        // La lista sale de config/security.php (env ROOT_EMAILS): antes estaba
+        // hardcodeada en el controlador.
+        if (in_array($email, config('security.root_emails'), true)) {
             return Constantes::USER_ROOT;
         }
 

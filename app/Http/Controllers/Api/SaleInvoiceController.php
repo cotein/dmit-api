@@ -27,7 +27,12 @@ class SaleInvoiceController extends Controller
      */
     public function index(Request $request)
     {
-        Log::info('Invoice Request:', $request->all());
+        // No loguear el payload completo: lleva datos fiscales del cliente.
+        Log::info('Invoice Request', [
+            'company_id' => $request->input('company_id'),
+            'user_id' => auth('api')->id(),
+            'filtros' => array_keys($request->query()),
+        ]);
 
         $invoices = $this->saleInvoiceRepository->find($request);
 
@@ -47,7 +52,8 @@ class SaleInvoiceController extends Controller
             $response = $this->paginatedResponse($invoices, new SaleInvoiceTransformer());
         }
 
-        Log::debug('Respuesta final:', is_array($response) ? $response : ['data' => $response]);
+        Log::debug('Respuesta final', ['cantidad' => count((array) $response)]);
+
         return response()->json($response, 200);
     }
 

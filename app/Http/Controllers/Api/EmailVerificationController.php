@@ -19,16 +19,20 @@ class EmailVerificationController extends Controller
 
     public function verify_email(Request $request)
     {
-        header('Access-Control-Allow-Origin: https://facturador.dmit.ar');
-        header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, Authorization');
-
+        // Los headers de CORS los maneja config/cors.php (HandleCors), no el controlador.
         $token = $request->query('token');
         // Verificar si el token existe en la caché
         if (Cache::has('verification_token_' . $token)) {
             $userId = Cache::get('verification_token_' . $token);
             // Marcar el usuario como verificado
             $user = User::find($userId);
+
+            if (! $user) {
+                Cache::forget('verification_token_' . $token);
+
+                return response()->json(['message' => 'El enlace de verificación es inválido o ha caducado.'], 400);
+            }
+
             $user->email_verified_at = now();
             $user->active = true;
             $user->save();
@@ -42,13 +46,21 @@ class EmailVerificationController extends Controller
         return response()->json(['message' => 'El enlace de verificación es inválido o ha caducado.'], 400);
     }
 
-    function resend(Request $request)
+    /**
+     * Reenvía el mail de verificación al usuario AUTENTICADO.
+     * Antes aceptaba un 'id' arbitrario del body: cualquiera podía disparar mails
+     * a cualquier usuario sin autenticarse.
+     */
+    public function resend(Request $request)
     {
+        $user = $request->user();
 
-        $user = User::find($request->id);
+        if (! $user) {
+            return response()->json(['message' => 'No autenticado'], 401);
+        }
 
         $user->sendEmailVerificationNotification();
 
-        return response()->json('Re-envío de verificación de cuenta exitosa.', 200);
+        return response()->json(['message' => 'Re-envío de verificación de cuenta exitosa.'], 200);
     }
 }

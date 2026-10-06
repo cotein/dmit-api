@@ -55,14 +55,17 @@ return [
             ]) : [],
         ],
 
+        // Conexiones de la migración de datos (comandos Migrate*). Las credenciales
+        // estaban hardcodeadas acá y commiteadas: ahora salen del .env.
+        // OJO: esas claves estuvieron en el historial de git -> hay que rotarlas.
         'dmit' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
-            'host' => 'www.dmit.ar',
-            'port' => env('DB_PORT', '3306'),
-            'database' => 'dmit-api',
-            'username' => 'root',
-            'password' => '311034',
+            'host' => env('DMIT_DB_HOST'),
+            'port' => env('DMIT_DB_PORT', '3306'),
+            'database' => env('DMIT_DB_DATABASE'),
+            'username' => env('DMIT_DB_USERNAME'),
+            'password' => env('DMIT_DB_PASSWORD'),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
@@ -78,11 +81,11 @@ return [
         'vete' => [
             'driver' => 'mysql',
             'url' => env('DATABASE_URL'),
-            'host' => 'www.asaliah.com.ar',
-            'port' => env('DB_PORT', '3306'),
-            'database' => 'facturador',
-            'username' => 'root',
-            'password' => 'asaliah1',
+            'host' => env('VETE_DB_HOST'),
+            'port' => env('VETE_DB_PORT', '3306'),
+            'database' => env('VETE_DB_DATABASE'),
+            'username' => env('VETE_DB_USERNAME'),
+            'password' => env('VETE_DB_PASSWORD'),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
