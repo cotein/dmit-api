@@ -16,13 +16,32 @@ class Company extends Model implements Auditable, HasMedia
     use HasFactory, \OwenIt\Auditing\Auditable, InteractsWithMedia;
 
     protected $casts = [
-        'afip_data' => 'array'
+        'afip_data' => 'array',
+        'arba_cit_password' => 'encrypted',
+    ];
+
+    /**
+     * La clave de la CIT de ARBA no se serializa nunca. Si se olvida acá, la
+     * empresa entera (y su clave) viaja en cualquier respuesta o log de auditoría
+     * que exponga el modelo.
+     */
+    protected $hidden = [
+        'arba_cit_password',
     ];
 
     function users(): BelongsToMany
     {
 
         return $this->belongsToMany(User::class);
+    }
+
+    /**
+     * Establecimientos habilitados en ARBA (planta + puerta) desde los que se
+     * puede emitir un COT.
+     */
+    public function trasladoPoints(): HasMany
+    {
+        return $this->hasMany(CompanyTrasladoPoint::class, 'company_id', 'id');
     }
 
     public function address()
