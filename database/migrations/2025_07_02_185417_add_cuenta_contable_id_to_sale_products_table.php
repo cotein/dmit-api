@@ -12,21 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            // Agrega la nueva columna 'accounting_account_id'
-            // Será un entero sin signo porque es un ID y no puede ser negativo
-            // Puede ser nulo (nullable) al principio, por si ya tienes datos existentes
-            // y no quieres que falle la migración. Después puedes rellenarlo.
-            $table->unsignedBigInteger('accounting_account_id')->nullable();
+            // accounting_accounts.id es INT UNSIGNED (tabla legacy con increments)
+            $table->unsignedInteger('accounting_account_id')->nullable();
 
-            // Opcional: Define una clave foránea para enlazar con tu tabla de cuentas contables
-            // Asumiendo que tu tabla de cuentas contables se llama 'cuentas_contables'
-            // y que su columna de ID se llama 'id'.
-            // Esta línea asegura que solo puedas asignar IDs de cuentas contables que existan.
+            // FK explícita: $table->foreign() (el ->constrained() sobre una columna
+            // común no crea el constraint, Fluent lo ignora en silencio).
             $table->foreign('accounting_account_id')
                   ->references('id')
                   ->on('accounting_accounts')
-                  ->constrained('accounting_accounts')
-                  ->onDelete('set null'); // Si se borra una cuenta contable, este campo se vuelve nulo
+                  ->onDelete('set null');
         });
     }
 

@@ -15,7 +15,7 @@ class CreateSaleInvoiceItemsTable extends Migration
     public function up()
     {
         Schema::create('sale_invoice_items', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id');
             $table->integer('sale_invoice_id')->unsigned()->nullable();
             $table->integer('product_id')->unsigned()->nullable();
             $table->float('quantity', 10)->unsigned()->nullable();

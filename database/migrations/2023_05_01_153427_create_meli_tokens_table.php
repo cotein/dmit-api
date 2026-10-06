@@ -15,7 +15,7 @@ class CreateMeliTokensTable extends Migration
     public function up()
     {
         Schema::create('meli_tokens', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id');
             $table->integer('company_id')->nullable();
             $table->integer('meli_user_id')->nullable();
             $table->integer('user_id')->nullable();

@@ -15,7 +15,7 @@ class CreateAfipDocumentsTable extends Migration
     public function up()
     {
         Schema::create('afip_documents', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id');
             $table->string('afip_code', 100)->nullable();
             $table->string('name', 100)->nullable();
             $table->timestamps();

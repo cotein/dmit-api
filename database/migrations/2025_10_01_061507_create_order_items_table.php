@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id();
 
             // --- Relaciones ---
-            // Se asume que la tabla de pedidos se llama 'orders' como en el ejemplo anterior.
-            // onDelete('cascade') borra los items si se borra el pedido. Esencial.
-            $table->foreignId('order_id')->nullable()->constrained('orders')->onDelete('cascade');
-            $table->foreignId('product_id')->nullable()->constrained('products');
-            $table->foreignId('pricelist_id')->nullable()->constrained('price_lists'); // Asumiendo tabla 'price_lists'
-            $table->foreignId('iva_id')->nullable()->constrained('ivas'); // Asumiendo tabla 'ivas'
+            // Tipos: orders = BIGINT UNSIGNED (foreignId); products e ivas = INT UNSIGNED
+            // (legacy con increments); price_lists = BIGINT UNSIGNED (se creó con id()).
+            // onDelete('cascade') borra los items si se borra el pedido.
+            $table->foreignId('order_id')->nullable();
+            $table->unsignedInteger('product_id')->nullable();
+            $table->foreignId('pricelist_id')->nullable();
+            $table->unsignedInteger('iva_id')->nullable();
 
             // --- Cálculos y Precios ---
             // Mejora: Se utiliza decimal() en lugar de double() para todos los cálculos y precios.
@@ -48,6 +49,11 @@ return new class extends Migration
             $table->boolean('is_chp')->nullable(); // Mejora: boolean() para tinyint(1)
 
             $table->timestamps(); // Maneja created_at y updated_at
+
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            $table->foreign('product_id')->references('id')->on('products');
+            $table->foreign('pricelist_id')->references('id')->on('price_lists');
+            $table->foreign('iva_id')->references('id')->on('ivas');
         });
     }
 

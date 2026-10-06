@@ -12,22 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('orders', function (Blueprint $table) {
-            $table->id(); // Equivalente a int unsigned NOT NULL AUTO_INCREMENT, pero como bigInteger.
+            $table->id();
 
             // --- Relaciones y Claves Foráneas ---
-            // Novedad: Campo para multi-tenant
-            $table->foreignId('company_id')->constrained('companies');
-
-            // Mejora: Uso de foreignId()->constrained() para integridad referencial.
-            $table->foreignId('customer_id')->nullable()->constrained('customers');
-            $table->foreignId('status_id')->nullable()->constrained('statuses'); // Asumiendo que tienes una tabla 'order_statuses'
-            $table->foreignId('user_id')->nullable()->constrained('users');
-            $table->foreignId('sale_invoice_id')->nullable()->constrained('sale_invoices');
+            // OJO con los tipos: las tablas legacy (2023) usan increments('id') = INT UNSIGNED,
+            // así que sus FK tienen que ser unsignedInteger. Las tablas nuevas (orders,
+            // order_items, payments, payment_methods) usan id() = BIGINT UNSIGNED y ahí sí
+            // va foreignId. Un tipo que no coincide con la columna referenciada falla con
+            // errno 150 (Foreign key constraint is incorrectly formed).
+            $table->unsignedInteger('company_id');
+            $table->unsignedInteger('customer_id')->nullable();
+            $table->unsignedInteger('status_id')->nullable();
+            $table->unsignedInteger('user_id')->nullable();
+            $table->unsignedInteger('sale_invoice_id')->nullable();
             // Sin default: el default(101) apuntaba a un voucher inexistente y hacía
             // fallar el INSERT (FK 1452). El comprobante se define al facturar.
-            $table->foreignId('voucher_id')->nullable()->constrained('vouchers');
-            $table->foreignId('parent_id')->nullable()->constrained('orders'); // Relación a sí misma
-            $table->foreignId('is_editing_by_user')->nullable()->constrained('users');
+            $table->unsignedInteger('voucher_id')->nullable();
+            $table->foreignId('parent_id')->nullable(); // Relación a sí misma (orders.id es BIGINT)
+            $table->unsignedInteger('is_editing_by_user')->nullable();
 
             // --- Campos de Negocio ---
             $table->string('code', 100)->nullable();
@@ -61,7 +63,17 @@ return new class extends Migration
             $table->json('geocoder')->nullable();
 
             // --- Timestamps ---
-            $table->timestamps(); 
+            $table->timestamps();
+
+            // --- Claves foráneas (explícitas: el tipo de cada columna lo define la tabla referenciada) ---
+            $table->foreign('company_id')->references('id')->on('companies');
+            $table->foreign('customer_id')->references('id')->on('customers');
+            $table->foreign('status_id')->references('id')->on('statuses');
+            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('sale_invoice_id')->references('id')->on('sale_invoices');
+            $table->foreign('voucher_id')->references('id')->on('vouchers');
+            $table->foreign('parent_id')->references('id')->on('orders');
+            $table->foreign('is_editing_by_user')->references('id')->on('users');
         });
     }
 

@@ -12,11 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sale_invoice_items', function (Blueprint $table) {
-            // Reemplaza tu definición actual de la columna con esta línea
-            $table->foreignId('accounting_account_id')
-                  ->nullable() // Si la relación es opcional
-                  ->constrained('accounting_accounts') // Crea el constraint
-                  ->onDelete('set null'); // Define el comportamiento al borrar
+            // accounting_accounts.id es INT UNSIGNED (tabla legacy con increments):
+            // con foreignId (BIGINT) la FK falla con errno 150.
+            $table->unsignedInteger('accounting_account_id')->nullable();
+
+            $table->foreign('accounting_account_id')
+                  ->references('id')
+                  ->on('accounting_accounts')
+                  ->onDelete('set null');
         });
     }
 

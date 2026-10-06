@@ -15,7 +15,7 @@ class CreateVouchersTable extends Migration
     public function up()
     {
         Schema::create('vouchers', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id');
             $table->string('afip_code', 100)->nullable();
             $table->string('name', 150)->nullable();
             $table->timestamps();

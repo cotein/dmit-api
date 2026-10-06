@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('payment_methods', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+            // companies.id es INT UNSIGNED (tabla legacy con increments)
+            $table->unsignedInteger('company_id');
             $table->string('name')->unique();
             $table->timestamps();
 
             $table->unique(['company_id', 'name']); // Un método de pago es único por compañía
+            $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
         });
     }
 

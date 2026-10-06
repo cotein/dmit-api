@@ -15,9 +15,10 @@ return new class extends Migration
             $table->id();
 
             // --- Campos Multi-Tenant y Relaciones ---
-            $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('order_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('payment_method_id')->constrained();
+            // companies = INT UNSIGNED (legacy); orders/payment_methods = BIGINT UNSIGNED.
+            $table->unsignedInteger('company_id');
+            $table->foreignId('order_id');
+            $table->foreignId('payment_method_id');
 
             // --- Campos Financieros y de Datos ---
             // Se usa decimal para evitar errores de precisión con valores monetarios.
@@ -29,6 +30,10 @@ return new class extends Migration
 
             // --- Timestamps ---
             $table->timestamps();
+
+            $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
+            $table->foreign('order_id')->references('id')->on('orders')->cascadeOnDelete();
+            $table->foreign('payment_method_id')->references('id')->on('payment_methods');
         });
     }
 

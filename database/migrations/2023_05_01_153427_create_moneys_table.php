@@ -15,7 +15,7 @@ class CreateMoneysTable extends Migration
     public function up()
     {
         Schema::create('moneys', function (Blueprint $table) {
-            $table->id();
+            $table->increments('id');
             $table->string('code', 191);
             $table->string('name', 191);
             $table->string('symbol', 191);
