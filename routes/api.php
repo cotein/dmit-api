@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\AfipVoucherController;
 use App\Http\Controllers\Api\PaymentTypeController;
 use App\Http\Controllers\Api\SaleInvoiceController;
 use App\Http\Controllers\Api\SaleConditionController;
+use App\Http\Controllers\Api\CotController;
 use App\Http\Controllers\Api\AfipInscriptionController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\AfipFacturaElectronicaController;
@@ -68,6 +69,18 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('/uploadAvatar', [UserController::class, 'uploadAvatar']);
         Route::post('product/img', [ProductController::class, 'img']);
         Route::post('company/uploadLogo', [CompanyController::class, 'logo']);
+
+        // COT · ARBA Buenos Aires. Entidad propia y previa al traslado.
+        Route::prefix('arba/cot')->group(function () {
+            Route::get('catalogos', [CotController::class, 'catalogos']);
+            Route::get('/', [CotController::class, 'index']);
+            Route::post('/', [CotController::class, 'store']);
+            Route::get('{cot}', [CotController::class, 'show']);
+            Route::put('{cot}', [CotController::class, 'update']);
+            Route::post('{cot}/emitir', [CotController::class, 'emitir']);
+            Route::get('{cot}/archivo', [CotController::class, 'archivo']);
+            Route::post('{cot}/anular', [CotController::class, 'anular']);
+        });
 
         Route::apiResources([
             'category' => CategoryController::class,
