@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\ArbaNomenclador;
+use App\Models\CotMapeoUnidadNomenclador;
 use App\Models\CotUnidadMedida;
 use App\Src\Arba\Cot\CotProvincias;
 use App\Src\Arba\Cot\NomencladorSqlParser;
@@ -27,7 +28,7 @@ use Illuminate\Support\Facades\DB;
 class ImportCotCatalogs extends Command
 {
     protected $signature = 'cot:import-catalogs
-                            {tipo : provincias | nomenclador | unidades}
+                            {tipo : provincias | nomenclador | unidades | mapeo}
                             {--file= : Ruta al archivo (SQL del nomenclador, CSV o JSON de unidades)}
                             {--dry-run : Informa qué haría sin escribir nada}';
 
@@ -39,6 +40,7 @@ class ImportCotCatalogs extends Command
             'provincias' => $this->importarProvincias(),
             'nomenclador' => $this->importarNomenclador(),
             'unidades' => $this->importarUnidades(),
+            'mapeo' => $this->importarMapeoUnidades(),
             default => $this->tipoInvalido(),
         };
     }
@@ -227,6 +229,50 @@ class ImportCotCatalogs extends Command
      * descriptiva ("KILOGRAMO(S)") y sirve para sugerir la unidad, pero NO es el
      * código de un carácter que pide el campo ARBA_CODIGO_UNIDAD_MEDIDA.
      */
+    /**
+     * Puente entre la unidad de medida del nomenclador y el código de UN
+     * CARÁCTER que espera ARBA.
+     *
+     * Primero asegura las unidades base que referencia la clave foránea y
+     * después carga el mapeo. Es idempotente: se puede correr las veces que
+     * haga falta.
+     */
+    private function importarMapeoUnidades(): int
+    {
+        $dryRun = (bool) $this->option('dry-run');
+
+        $mapeo = [
+            'UNIDAD' => 'U',
+            'KILOGRAMO' => 'K',
+            'TONELADA' => 'T',
+            'LITRO' => 'L',
+            'METRO' => 'M',
+            'METRO CUBICO' => 'C',
+            'DOCENA' => 'D',
+        ];
+
+        foreach ($mapeo as $descripcion => $codigo) {
+            if ($dryRun) {
+                continue;
+            }
+
+            // La FK apunta a cot_unidades_medida: la unidad tiene que existir.
+            CotUnidadMedida::updateOrCreate(
+                ['codigo' => $codigo],
+                ['descripcion' => ucfirst(mb_strtolower($descripcion)), 'active' => true]
+            );
+
+            CotMapeoUnidadNomenclador::updateOrCreate(
+                ['descripcion_nomenclador' => $descripcion],
+                ['codigo_unidad' => $codigo]
+            );
+        }
+
+        $this->info(($dryRun ? '[dry-run] ' : '') . 'Mapeo de unidades del nomenclador: ' . count($mapeo) . ' filas');
+
+        return self::SUCCESS;
+    }
+
     private function importarUnidades(): int
     {
         $file = $this->option('file');

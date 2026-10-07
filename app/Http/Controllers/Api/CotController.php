@@ -9,6 +9,7 @@ use App\Models\CompanyTrasladoPoint;
 use App\Models\Cot;
 use App\Models\CotArchivo;
 use App\Models\CotItem;
+use App\Models\CotMapeoUnidadNomenclador;
 use App\Models\CotProvincia;
 use App\Src\Arba\Cot\CotEmisionService;
 use App\Src\Arba\Cot\CotFileName;
@@ -54,8 +55,10 @@ class CotController extends Controller
 
         $busqueda = trim((string) $request->query('search', ''));
 
+        // El campo nivel NO es la profundidad del árbol: los productos que van
+        // al TXT son las variedades de 6 dígitos, sin importar el nivel.
         $nomenclador = ArbaNomenclador::query()
-            ->where('nivel', 6)
+            ->whereRaw('CHAR_LENGTH(codigo) = 6')
             ->when($busqueda !== '', function ($query) use ($busqueda) {
                 $query->where(function ($sub) use ($busqueda) {
                     $sub->where('codigo', 'like', $busqueda.'%')
@@ -382,6 +385,19 @@ class CotController extends Controller
     {
         $unidad = trim((string) $unidad);
 
+        if ($unidad === '') {
+            return null;
+        }
+
+        // La unidad del nomenclador es descriptiva ("KILOGRAMO"): se traduce
+        // con el mapeo, que es lo que ARBA espera en un solo carácter.
+        $codigo = CotMapeoUnidadNomenclador::codigoPara($unidad);
+
+        if ($codigo !== null) {
+            return $codigo;
+        }
+
+        // Si la unidad ya viene como un carácter suelto, se usa tal cual.
         return strlen($unidad) === 1 ? $unidad : null;
     }
 
