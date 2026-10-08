@@ -10,7 +10,6 @@ use App\Models\Cot;
 use App\Models\CotArchivo;
 use App\Models\CotItem;
 use App\Models\CotMapeoUnidadNomenclador;
-use App\Models\CotProvincia;
 use App\Src\Arba\Cot\CotEmisionService;
 use App\Src\Arba\Cot\CotFileName;
 use Illuminate\Http\JsonResponse;
@@ -46,8 +45,15 @@ class CotController extends Controller
     /**
      * GET arba/cot/catalogos
      *
-     * Lo que la pantalla necesita para llenar los selects. El nomenclador se
-     * devuelve acotado y con búsqueda: son miles de variedades.
+     * Lo que la pantalla necesita para llenar los selects.
+     *
+     * Provincias: salen de `states`, que ya trae las 24 jurisdicciones con su
+     * código de COT en `cot_code` (la tabla cot_provincias tenía sólo 19 y
+     * dejaba afuera Córdoba, Entre Ríos, Neuquén, Río Negro y Tucumán).
+     *
+     * Nomenclador: se devuelve acotado y con búsqueda, e incluye el RUBRO al
+     * que pertenece cada variedad (son miles y el código de 6 dígitos solo no
+     * dice a qué rubro de ARBA pertenece).
      */
     public function catalogos(Request $request): JsonResponse
     {
@@ -56,25 +62,39 @@ class CotController extends Controller
         $busqueda = trim((string) $request->query('search', ''));
 
         // El campo nivel NO es la profundidad del árbol: los productos que van
-        // al TXT son las variedades de 6 dígitos, sin importar el nivel.
+        // al TXT son las variedades de 6 dígitos, sin importar el nivel. El
+        // rubro es el padre de esa variedad y es lo que se muestra en pantalla.
         $nomenclador = ArbaNomenclador::query()
-            ->whereRaw('CHAR_LENGTH(codigo) = 6')
+            ->from('arba_nomenclador_tb as variedad')
+            ->leftJoin('arba_nomenclador_tb as rubro', 'rubro.codigo', '=', 'variedad.codigo_padre')
+            ->whereRaw('CHAR_LENGTH(variedad.codigo) = 6')
             ->when($busqueda !== '', function ($query) use ($busqueda) {
                 $query->where(function ($sub) use ($busqueda) {
-                    $sub->where('codigo', 'like', $busqueda.'%')
-                        ->orWhere('descripcion', 'like', '%'.$busqueda.'%');
+                    $sub->where('variedad.codigo', 'like', $busqueda.'%')
+                        ->orWhere('variedad.descripcion', 'like', '%'.$busqueda.'%')
+                        ->orWhere('rubro.codigo', 'like', $busqueda.'%')
+                        ->orWhere('rubro.descripcion', 'like', '%'.$busqueda.'%');
                 });
             })
-            ->orderBy('codigo')
+            ->orderBy('variedad.codigo')
             ->limit((int) min(max((int) $request->query('limit', 200), 1), 500))
-            ->get(['codigo', 'descripcion', 'unidad_medida']);
+            ->get([
+                'variedad.codigo as codigo',
+                'variedad.descripcion as descripcion',
+                'variedad.unidad_medida as unidadMedida',
+                'rubro.codigo as rubroCodigo',
+                'rubro.descripcion as rubroDescripcion',
+            ]);
 
         $puntos = $empresa
             ? CompanyTrasladoPoint::query()->where('company_id', $empresa->id)->get(['id', 'nombre'])
             : collect();
 
         return response()->json([
-            'provincias' => CotProvincia::query()->orderBy('codigo')->get(['codigo', 'descripcion']),
+            'provincias' => DB::table('states')
+                ->whereNotNull('cot_code')
+                ->orderBy('name')
+                ->get(['cot_code as codigo', 'name as nombre']),
             'puntosTraslado' => $puntos,
             'nomenclador' => $nomenclador,
         ]);
@@ -82,23 +102,48 @@ class CotController extends Controller
 
     /**
      * GET arba/cot
+     *
+     * Listado de remitos (COT) de la empresa, con los filtros de fecha y
+     * destinatario. Devuelve la misma forma que espera la pantalla: la lista
+     * con los datos presentables y los datos de paginación.
      */
     public function index(Request $request): JsonResponse
     {
         $empresa = $this->empresa($request);
 
         $cots = Cot::query()
-            ->with('items')
-            ->when($empresa, fn ($query) => $query->where('company_id', $empresa->id))
+            ->with(['items', 'archivo'])
+            ->when($empresa, fn ($query) => $query->where('cots.company_id', $empresa->id))
             ->when($request->query('desde'), fn ($query, $desde) => $query->where('fecha_emision', '>=', $desde))
             ->when($request->query('hasta'), fn ($query, $hasta) => $query->where('fecha_emision', '<=', $hasta))
             ->when($request->query('destinatario'), function ($query, $destinatario) {
                 $query->where('destinatario_razon_social', 'like', '%'.$destinatario.'%');
             })
+            ->when($request->query('estado'), function ($query, $estado) {
+                if ($estado === self::ESTADO_EMITIDO) {
+                    $query->where('procesado', true);
+                }
+
+                if ($estado === self::ESTADO_BORRADOR) {
+                    $query->whereNull('procesado')->whereNull('errores');
+                }
+
+                if ($estado === self::ESTADO_RECHAZADO) {
+                    $query->whereNotNull('errores')->where('errores', 'not like', 'Anulado por el usuario%');
+                }
+            })
             ->orderByDesc('id')
             ->paginate((int) min(max((int) $request->query('per_page', 20), 1), 100));
 
-        return response()->json($cots);
+        return response()->json([
+            'data' => collect($cots->items())->map(fn (Cot $cot) => $this->presentar($cot)),
+            'meta' => [
+                'currentPage' => $cots->currentPage(),
+                'lastPage' => $cots->lastPage(),
+                'perPage' => $cots->perPage(),
+                'total' => $cots->total(),
+            ],
+        ]);
     }
 
     /**
@@ -437,13 +482,35 @@ class CotController extends Controller
     }
 
     /**
+     * Estado del COT para la pantalla.
+     *
+     * Ojo: la anulación no tiene columna propia y se guarda en `errores` con un
+     * texto fijo (ver anular()). Si algún día se agrega la columna, esto queda
+     * más simple.
+     */
+    private function estadoDe(Cot $cot): string
+    {
+        if ($cot->procesado) {
+            return self::ESTADO_EMITIDO;
+        }
+
+        if ($cot->errores) {
+            return str_starts_with((string) $cot->errores, 'Anulado por el usuario')
+                ? self::ESTADO_ANULADO
+                : self::ESTADO_RECHAZADO;
+        }
+
+        return self::ESTADO_BORRADOR;
+    }
+
+    /**
      * Da forma a la respuesta que consume la pantalla.
      */
     private function presentar(Cot $cot): \Illuminate\Support\Collection
     {
         return collect([
             'id' => $cot->id,
-            'estado' => $cot->procesado ? self::ESTADO_EMITIDO : self::ESTADO_BORRADOR,
+            'estado' => $this->estadoDe($cot),
             'sujetoGenerador' => $cot->sujeto_generador,
             'fechaEmision' => optional($cot->fecha_emision)->format('Ymd'),
             'fechaSalidaTransporte' => optional($cot->fecha_salida_transporte)->format('Ymd'),
