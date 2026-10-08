@@ -118,23 +118,33 @@ class ReceiptRepository
     {
         $result = null;
 
-        $si_id = (int) $request->invoicesToCancel[0]['key'];
+        $invoices = collect($request->input('invoicesToCancel') ?? []);
+        $documents = collect($request->input('documentsCancelation') ?? []);
 
-        DB::transaction(function () use ($request, $si_id, &$result) {
+        DB::transaction(function () use ($request, $invoices, $documents, &$result) {
 
-            $si = SaleInvoices::findOrFail($si_id);
+            // Con comprobantes, el cliente y la empresa salen del primero, que
+            // es lo que hacia siempre. Sin comprobantes es un PAGO A CUENTA:
+            // vienen en el request y el recibo queda sin imputacion, con el
+            // saldo a favor del cliente en receipts.saldo.
+            $firstInvoice = $invoices->isNotEmpty()
+                ? SaleInvoices::findOrFail((int) $invoices->first()['key'])
+                : null;
+
+            $customerId = $firstInvoice ? $firstInvoice->customer_id : (int) $request->input('customer_id');
+            $companyId = $firstInvoice ? $firstInvoice->company_id : (int) $request->input('company_id');
 
             try {
                 // Crear el recibo
                 $receipt = new Receipt;
-                $receipt->customer_id = $si->customer_id;
-                $receipt->company_id = $si->company_id;
+                $receipt->customer_id = $customerId;
+                $receipt->company_id = $companyId;
                 $receipt->user_id = auth()->user()->id;
-                $receipt->total = collect($request->documentsCancelation)->sum('import');
-                $receipt->saldo =   $request->saldo; // si el saldo es negativo, es a favor del cliente
+                $receipt->total = $documents->sum('import');
+                $receipt->saldo = $request->input('saldo', 0); // si el saldo es negativo, es a favor del cliente
                 $receipt->save();
 
-                collect($request->invoicesToCancel)->each(function ($invoice) use ($receipt) {
+                $invoices->each(function ($invoice) use ($receipt) {
                     if ($invoice['toPayNow'] > 0) {
 
                         // Datos adicionales para la tabla pivot
@@ -163,19 +173,21 @@ class ReceiptRepository
                 });
 
                 // Persistir el pago
-                collect($request->documentsCancelation)->each(function ($document) use ($receipt) {
+                $documents->each(function ($document) use ($receipt) {
                     $receipt_payment = new ReceiptPayment;
                     $receipt_payment->receipt_id = $receipt->id;
                     $receipt_payment->payment_type_id = $document['payment_type_id'];
-                    $receipt_payment->number = $document['number'];
-                    $receipt_payment->cbu_id = (is_null($document['cbu_id'])) ? 0 : $document['cbu_id'];
-                    $receipt_payment->date = new Date($document['imputation_date']);
-                    $receipt_payment->description = $document['comments'];
+                    $receipt_payment->number = $document['number'] ?? null;
+                    $receipt_payment->cbu_id = empty($document['cbu_id']) ? 0 : $document['cbu_id'];
+                    // La fecha de imputacion no es obligatoria en la pantalla
+                    // actual: sin fecha, el pago queda con la fecha del dia.
+                    $receipt_payment->date = new Date(! empty($document['imputation_date']) ? $document['imputation_date'] : null);
+                    $receipt_payment->description = $document['comments'] ?? null;
                     $receipt_payment->total = $document['import'];
-                    $receipt_payment->bank_id = $document['bank'];
-                    $receipt_payment->cheque_date = $document['chequeDate'];
-                    $receipt_payment->cheque_expirate = $document['chequeExpirate'];
-                    $receipt_payment->cheque_owner = $document['chequeOwner'];
+                    $receipt_payment->bank_id = $document['bank'] ?? null;
+                    $receipt_payment->cheque_date = $document['chequeDate'] ?? null;
+                    $receipt_payment->cheque_expirate = $document['chequeExpirate'] ?? null;
+                    $receipt_payment->cheque_owner = $document['chequeOwner'] ?? null;
                     $receipt_payment->save();
                 });
 
