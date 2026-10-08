@@ -87,7 +87,12 @@ trait CompanyTrait
     public function setMyCompanies($user): array
     {
 
-        return $user->companies->transform(function ($company) {
+        // El usuario llega por parametro: no se puede usar auth()->user() acá.
+        // Este metodo tambien corre durante el login (el transformer del token),
+        // donde todavía no hay sesión: auth()->user() es null y la línea de
+        // user_id tiraba "Attempt to read property id on null" (500 en /auth/google
+        // para cualquier usuario que ya tenga empresa).
+        return $user->companies->transform(function ($company) use ($user) {
 
             $logo = $company->getMedia('logos')->first();
 
@@ -119,7 +124,7 @@ trait CompanyTrait
                 'pto_vta_recibo' => $company->pto_vta_recibo,
                 'pto_vta_remito' => $company->pto_vta_remito,
                 'type_company' => $company->afip_type,
-                'user_id' => auth()->user()->id,
+                'user_id' => $user->id,
                 'vouchers' => $this->vouchers($company),
                 'cbus' => $this->setCbus($company),
                 'webSite' => $company->web_site,
