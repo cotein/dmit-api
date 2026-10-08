@@ -86,6 +86,10 @@ Route::middleware(['auth:api'])->group(function () {
         // Pagos recibidos: una fila por pago (receipt_payments), no por recibo.
         Route::get('receipt-payments', [ReceiptPaymentController::class, 'index']);
 
+        // Anulación de un recibo: se marca con motivo y fecha, y se revierte la
+        // imputación sobre los comprobantes.
+        Route::post('receipt/{receipt}/anular', [ReceiptController::class, 'anular']);
+
         Route::apiResources([
             'category' => CategoryController::class,
             'company' => CompanyController::class,
