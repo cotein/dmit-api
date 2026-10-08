@@ -86,8 +86,14 @@ class CotController extends Controller
                 'rubro.descripcion as rubroDescripcion',
             ]);
 
+        // La tabla guarda la columna como `name` (así la crea la migración y así
+        // la declara el modelo). Antes se pedía `nombre`, que no existe: el
+        // catálogo respondía 500 y la pantalla de Nuevo COT no abría.
         $puntos = $empresa
-            ? CompanyTrasladoPoint::query()->where('company_id', $empresa->id)->get(['id', 'nombre'])
+            ? CompanyTrasladoPoint::query()
+                ->where('company_id', $empresa->id)
+                ->orderBy('name')
+                ->get(['id', 'name as nombre'])
             : collect();
 
         return response()->json([
