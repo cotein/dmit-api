@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\AfipIvaController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ReceiptController;
+use App\Http\Controllers\Api\ReceiptPaymentController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\AfipStateController;
@@ -81,6 +82,9 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('{cot}/archivo', [CotController::class, 'archivo']);
             Route::post('{cot}/anular', [CotController::class, 'anular']);
         });
+
+        // Pagos recibidos: una fila por pago (receipt_payments), no por recibo.
+        Route::get('receipt-payments', [ReceiptPaymentController::class, 'index']);
 
         Route::apiResources([
             'category' => CategoryController::class,

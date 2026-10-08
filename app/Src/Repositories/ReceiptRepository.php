@@ -23,8 +23,16 @@ class ReceiptRepository
 
     private function applyOptionalFilters($query, Request $request): void
     {
-        if ($request->has('status_id')) {
-            $query->where('status_id', $request->status_id);
+        // OJO: la tabla receipts NO tiene status_id. El filtro viejo
+        // ($query->where('status_id', ...)) consultaba una columna inexistente:
+        // si alguien mandaba el parametro, el listado fallaba con SQLSTATE 42S22.
+        // El estado del recibo es derivado y ahora se filtra por cancelled_at.
+        if ($request->filled('status')) {
+            if ($request->status === 'anulado') {
+                $query->whereNotNull('cancelled_at');
+            } elseif ($request->status === 'activo') {
+                $query->whereNull('cancelled_at');
+            }
         }
 
         if ($request->has('customer_id')) {
