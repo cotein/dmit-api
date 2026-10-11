@@ -16,6 +16,10 @@ return [
         '/forgotPassword/reset/code',
         '/forgotPassword/validate/code',
         '/forgotPassword/resetPassword',
+        // Restablecer con código de 6 dígitos: son rutas de cuenta y viven en la
+        // RAÍZ, no bajo /api (igual que las de forgotPassword de arriba). Si no se
+        // listan acá, el navegador las bloquea por CORS y la pantalla no avanza.
+        'password/code/*',
          'sanctum/csrf-cookie'
 
     ],

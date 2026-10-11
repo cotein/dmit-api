@@ -121,6 +121,27 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMed
         $resul->wait();
     }
 
+    /**
+     * Revoca TODOS los tokens de API del usuario (Passport).
+     *
+     * Se llama al cambiar la contraseña: si no, el token que ya estaba afuera
+     * (el del navegador de otro dispositivo, o el de alguien que entró con la
+     * contraseña vieja) sigue sirviendo como si nada hubiera pasado.
+     *
+     * Devuelve cuántos revocó, para poder dejarlo en el log.
+     */
+    public function revokeAllApiTokens(): int
+    {
+        $revoked = 0;
+
+        foreach ($this->tokens as $token) {
+            $token->revoke();
+            $revoked++;
+        }
+
+        return $revoked;
+    }
+
     // En App\Models\User.php
 
 

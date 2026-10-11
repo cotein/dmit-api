@@ -191,4 +191,18 @@ return [
         'AfipWebService' => Cotein\ApiAfip\Facades\AfipWebService::class,
     ])->toArray(),
 
+    /*
+    |--------------------------------------------------------------------------
+    | URL del facturador (no la del API)
+    |--------------------------------------------------------------------------
+    |
+    | Los mails que devuelven al usuario a la aplicación (hoy: restablecer la
+    | contraseña) apuntan al facturador, que es otro dominio que este API. Va acá
+    | y no hardcodeado para poder probar en local apuntando a localhost.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'https://facturador.dmit.ar'),
+
 ];
+
