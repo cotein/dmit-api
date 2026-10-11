@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Api\PasswordCodeController;
 use App\Http\Controllers\Api\TwoFactorController;
+use App\Http\Controllers\Api\MailController;
 
 Route::get('updates', [DashBoardController::class, 'updates']);
 Route::post('register', [RegisterController::class, 'register']);
@@ -86,6 +87,11 @@ Route::middleware(['auth:api'])->group(function () {
         // Cuenta: doble factor. Van bajo /api (y no en la raíz como las de ingreso)
         // porque el frontend firma con el token sólo los pedidos que llevan "api"
         // en la URL (ver src/api/base-api.ts del facturador).
+        // Envío de comprobantes por correo. Antes el frontend le pegaba directo al
+        // microservicio de emails (que quedó sin dominio): ahora pasa por acá y sale
+        // por el mailer de Laravel, como el resto de los mails.
+        Route::post('mails/invoice', [MailController::class, 'sendInvoice']);
+
         Route::prefix('account')->group(function () {
             Route::get('two-factor', [TwoFactorController::class, 'state']);
             Route::post('two-factor/totp/setup', [TwoFactorController::class, 'setupTotp']);

@@ -9,6 +9,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Laravel\Passport\HasApiTokens;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -16,9 +17,11 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Mail\VerifyEmailMail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMedia
@@ -106,27 +109,33 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMed
         return false;
     }
 
-    public function sendEmailVerification($email, $token)
+    /**
+     * Mail de activación de la cuenta.
+     *
+     * Antes le pegaba por HTTP al microservicio de emails, que quedó sin dominio (los
+     * usuarios se registraban y nunca les llegaba el mail). Ahora sale por el mailer
+     * de Laravel (Resend), igual que el resto de los mails de cuenta.
+     */
+    public function sendEmailVerification($email, $token): void
     {
-        $client = new \GuzzleHttp\Client();
+        Mail::to($email)->send(new VerifyEmailMail($this, $token));
+    }
 
-        $resul = $client->postAsync(env('EMAIL_SENDER_URL') . '/api/email-sender/register-user', [
-            'json' => [
-                'to' => $email,
-                'token' => $token,
-            ],
-        ]);
+    /**
+     * Reenvío del mail de activación (lo llama Laravel cuando el usuario lo pide).
+     *
+     * Se genera un token en caché y se manda el mail propio: el de Laravel traía una
+     * URL firmada que la pantalla de verificación no entiende (espera `?token=`).
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $token = Str::random(100);
 
-        $resul->then(
-            function ($response) {
-                Log::info('Email sent successfully ' . $response->getBody());
-            },
-            function ($exception) {
-                Log::error('Failed to send email: ' . $exception->getMessage());
-            }
-        );
+        Cache::put('verification_token_' . $token, $this->id, now()->addHours(1));
 
-        $resul->wait();
+        Mail::to($this->email)->send(new VerifyEmailMail($this, $token));
+
+        Log::info('Reenvío del correo de verificación para: ' . $this->email);
     }
 
     /**
