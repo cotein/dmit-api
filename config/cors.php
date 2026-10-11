@@ -7,7 +7,9 @@ return [
         '/login',
         '/logout',
         '/register',
-        '/auth/google',
+        // Cubre /auth/google, /auth/two-factor y /auth/login-code/* (todas son del
+        // ingreso y viven en la raíz, no bajo /api).
+        'auth/*',
         'oauth/*',
         'verify-email/*',
         '/email/resend',

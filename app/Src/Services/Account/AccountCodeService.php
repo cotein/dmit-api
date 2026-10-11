@@ -2,7 +2,9 @@
 
 namespace App\Src\Services\Account;
 
+use App\Mail\LoginCodeMail;
 use App\Mail\PasswordResetCodeMail;
+use App\Mail\TwoFactorCodeMail;
 use App\Models\AccountCode;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -135,6 +137,8 @@ class AccountCodeService
     {
         $mailable = match ($purpose) {
             AccountCode::PURPOSE_PASSWORD_RESET => new PasswordResetCodeMail($user, $code),
+            AccountCode::PURPOSE_TWO_FACTOR_EMAIL => new TwoFactorCodeMail($user, $code),
+            AccountCode::PURPOSE_LOGIN_CODE => new LoginCodeMail($user, $code),
             default => null,
         };
 

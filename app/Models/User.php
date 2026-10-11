@@ -49,6 +49,10 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMed
     protected $hidden = [
         'password',
         'remember_token',
+        // El secreto del doble factor y los códigos de recuperación jamás salen en
+        // un JSON: si algún endpoint serializa el modelo, no se filtran.
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -58,6 +62,10 @@ class User extends Authenticatable implements Auditable, MustVerifyEmail, HasMed
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        // El secreto del doble factor va cifrado con la APP_KEY: si alguien lee la
+        // base, no puede generar los códigos. Nunca sale en un JSON (ver $hidden).
+        'two_factor_secret' => 'encrypted',
+        'two_factor_confirmed_at' => 'datetime',
     ];
 
     /** Relations ship */

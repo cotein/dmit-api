@@ -33,12 +33,19 @@ use App\Http\Controllers\Api\MercadoPagoCallbackController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Api\PasswordCodeController;
+use App\Http\Controllers\Api\TwoFactorController;
 
 Route::get('updates', [DashBoardController::class, 'updates']);
 Route::post('register', [RegisterController::class, 'register']);
 Route::post('register/check-cuit', [RegisterController::class, 'checkCuit']);
 Route::post('login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::post('auth/google', [AuthController::class, 'googleLogin'])->middleware('throttle:10,1');
+
+// Doble factor y "entrar con un código". Son públicas (todavía no hay sesión: son
+// parte del ingreso) y llevan throttle: el código se puede intentar adivinar.
+Route::post('auth/two-factor', [AuthController::class, 'twoFactorChallenge'])->middleware('throttle:10,1');
+Route::post('auth/login-code/request', [AuthController::class, 'requestLoginCode'])->middleware('throttle:5,1');
+Route::post('auth/login-code/verify', [AuthController::class, 'verifyLoginCode'])->middleware('throttle:10,1');
 Route::get('verify-email', [EmailVerificationController::class, 'verify_email'])->name('verification.verify'); // Make sure to keep this as your route name
 Route::post('email/resend', [EmailVerificationController::class, 'resend'])->name('verification.resend');
 
@@ -75,6 +82,18 @@ Route::prefix('api')->group(function () {
 Route::middleware(['auth:api'])->group(function () {
 
     Route::prefix('api')->group(function () {
+
+        // Cuenta: doble factor. Van bajo /api (y no en la raíz como las de ingreso)
+        // porque el frontend firma con el token sólo los pedidos que llevan "api"
+        // en la URL (ver src/api/base-api.ts del facturador).
+        Route::prefix('account')->group(function () {
+            Route::get('two-factor', [TwoFactorController::class, 'state']);
+            Route::post('two-factor/totp/setup', [TwoFactorController::class, 'setupTotp']);
+            Route::post('two-factor/totp/confirm', [TwoFactorController::class, 'confirmTotp']);
+            Route::post('two-factor/email', [TwoFactorController::class, 'enableEmail']);
+            Route::delete('two-factor', [TwoFactorController::class, 'disable']);
+            Route::post('two-factor/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes']);
+        });
 
         Route::prefix('arba')->group(function () {
             Route::post('/alicuota_por_sujeto', [ArbaController::class, 'alicuota_por_sujeto']);
