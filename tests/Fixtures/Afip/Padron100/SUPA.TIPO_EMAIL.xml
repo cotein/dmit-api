@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <ns2:getParameterCollectionByNameResponse xmlns:ns2="http://a100.soap.ws.server.pucParam.sr/">
+      <parameterCollectionReturn>
+        <metadata>
+          <fechaHora>2017-05-05T10:54:45.034-03:00</fechaHora>
+          <servidor>awshomo.afip.gov.ar</servidor>
+        </metadata>
+        <parameterCollection>
+          <name>SUPA.TIPO_EMAIL</name>
+          <!-- FIXTURE, no es una respuesta real de ARCA.
+               SUPA.TIPO_EMAIL con los tres casos de descripción: <decription>, <description>
+               y ninguno de los dos (para ver el aviso). La colección no se sincroniza de
+               verdad en la verificación, así que sirve como caso siempre pendiente. -->
+          <parameterList>
+            <attributeList>
+              <name>COD_TIPO_EMAIL</name>
+              <value>1</value>
+            </attributeList>
+            <decription>LABORAL</decription>
+            <id>1</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>COD_TIPO_EMAIL</name>
+              <value>2</value>
+            </attributeList>
+            <description>PERSONAL</description>
+            <id>2</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>COD_TIPO_EMAIL</name>
+              <value>3</value>
+            </attributeList>
+            <id>3</id>
+          </parameterList>
+        </parameterCollection>
+      </parameterCollectionReturn>
+    </ns2:getParameterCollectionByNameResponse>
+  </soap:Body>
+</soap:Envelope>

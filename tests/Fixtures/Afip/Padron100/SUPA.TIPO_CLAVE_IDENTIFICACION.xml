@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <ns2:getParameterCollectionByNameResponse xmlns:ns2="http://a100.soap.ws.server.pucParam.sr/">
+      <parameterCollectionReturn>
+        <metadata>
+          <fechaHora>2017-05-05T10:54:45.034-03:00</fechaHora>
+          <servidor>awshomo.afip.gov.ar</servidor>
+        </metadata>
+        <parameterCollection>
+          <name>SUPA.TIPO_CLAVE_IDENTIFICACION</name>
+<!-- FIXTURE, no es una respuesta real de ARCA.
+     SUPA.TIPO_CLAVE_IDENTIFICACION, con <description> (variante del esquema del manual, §3.2.2).
+     Tiene la forma exacta del manual v2.1 (sobre SOAP, namespace, metadata,
+     parameterList/attributeList/id) y los códigos del catálogo que el sistema
+     tiene hoy cargado a mano, escritos como los escribe ARCA (mayúsculas, sin
+     acentos). Los valores reales sólo salen del servicio. -->
+
+          <parameterList>
+            <attributeList>
+              <name>COD_CLAVE_IDENTIFICACION</name>
+              <value>80</value>
+            </attributeList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CUIT</value>
+            </attributeList>
+            <description>CUIT</description>
+            <id>80</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>COD_CLAVE_IDENTIFICACION</name>
+              <value>86</value>
+            </attributeList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CUIL</value>
+            </attributeList>
+            <description>CUIL</description>
+            <id>86</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>COD_CLAVE_IDENTIFICACION</name>
+              <value>87</value>
+            </attributeList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CDI</value>
+            </attributeList>
+            <description>CDI</description>
+            <id>87</id>
+          </parameterList>
+        </parameterCollection>
+      </parameterCollectionReturn>
+    </ns2:getParameterCollectionByNameResponse>
+  </soap:Body>
+</soap:Envelope>

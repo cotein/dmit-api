@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <ns2:getParameterCollectionByNameResponse xmlns:ns2="http://a100.soap.ws.server.pucParam.sr/">
+      <parameterCollectionReturn>
+        <metadata>
+          <fechaHora>2017-05-05T10:54:45.034-03:00</fechaHora>
+          <servidor>awshomo.afip.gov.ar</servidor>
+        </metadata>
+        <parameterCollection>
+          <name>SUPA.TIPO_DOCUMENTO</name>
+<!-- FIXTURE, no es una respuesta real de ARCA.
+     SUPA.TIPO_DOCUMENTO, con <decription> (variante del ejemplo del manual, §3.2.3).
+     Tiene la forma exacta del manual v2.1 (sobre SOAP, namespace, metadata,
+     parameterList/attributeList/id) y los códigos del catálogo que el sistema
+     tiene hoy cargado a mano, escritos como los escribe ARCA (mayúsculas, sin
+     acentos). Los valores reales sólo salen del servicio. -->
+
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI POLICIA FEDERAL</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>0</value>
+            </attributeList>
+            <decription>CI POLICIA FEDERAL</decription>
+            <id>0</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI BUENOS AIRES</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>1</value>
+            </attributeList>
+            <decription>CI BUENOS AIRES</decription>
+            <id>1</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI CATAMARCA</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>2</value>
+            </attributeList>
+            <decription>CI CATAMARCA</decription>
+            <id>2</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI CORDOBA</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>3</value>
+            </attributeList>
+            <decription>CI CORDOBA</decription>
+            <id>3</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI CORRIENTES</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>4</value>
+            </attributeList>
+            <decription>CI CORRIENTES</decription>
+            <id>4</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI ENTRE RIOS</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>5</value>
+            </attributeList>
+            <decription>CI ENTRE RIOS</decription>
+            <id>5</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI JUJUY</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>6</value>
+            </attributeList>
+            <decription>CI JUJUY</decription>
+            <id>6</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI MENDOZA</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>7</value>
+            </attributeList>
+            <decription>CI MENDOZA</decription>
+            <id>7</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI LA RIOJA</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>8</value>
+            </attributeList>
+            <decription>CI LA RIOJA</decription>
+            <id>8</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI SALTA</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>9</value>
+            </attributeList>
+            <decription>CI SALTA</decription>
+            <id>9</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI SAN JUAN</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>10</value>
+            </attributeList>
+            <decription>CI SAN JUAN</decription>
+            <id>10</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI SAN LUIS</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>11</value>
+            </attributeList>
+            <decription>CI SAN LUIS</decription>
+            <id>11</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI SANTA FE</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>12</value>
+            </attributeList>
+            <decription>CI SANTA FE</decription>
+            <id>12</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI SANTIAGO DEL ESTERO</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>13</value>
+            </attributeList>
+            <decription>CI SANTIAGO DEL ESTERO</decription>
+            <id>13</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI TUCUMAN</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>14</value>
+            </attributeList>
+            <decription>CI TUCUMAN</decription>
+            <id>14</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI CHACO</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>16</value>
+            </attributeList>
+            <decription>CI CHACO</decription>
+            <id>16</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI CHUBUT</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>17</value>
+            </attributeList>
+            <decription>CI CHUBUT</decription>
+            <id>17</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI FORMOSA</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>18</value>
+            </attributeList>
+            <decription>CI FORMOSA</decription>
+            <id>18</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI MISIONES</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>19</value>
+            </attributeList>
+            <decription>CI MISIONES</decription>
+            <id>19</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI NEUQUEN</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>20</value>
+            </attributeList>
+            <decription>CI NEUQUEN</decription>
+            <id>20</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI LA PAMPA</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>21</value>
+            </attributeList>
+            <decription>CI LA PAMPA</decription>
+            <id>21</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI RIO NEGRO</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>22</value>
+            </attributeList>
+            <decription>CI RIO NEGRO</decription>
+            <id>22</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI SANTA CRUZ</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>23</value>
+            </attributeList>
+            <decription>CI SANTA CRUZ</decription>
+            <id>23</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI TIERRA DEL FUEGO</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>24</value>
+            </attributeList>
+            <decription>CI TIERRA DEL FUEGO</decription>
+            <id>24</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CUIT</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>80</value>
+            </attributeList>
+            <decription>CUIT</decription>
+            <id>80</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CUIL</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>86</value>
+            </attributeList>
+            <decription>CUIL</decription>
+            <id>86</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CDI</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>87</value>
+            </attributeList>
+            <decription>CDI</decription>
+            <id>87</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>LE</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>89</value>
+            </attributeList>
+            <decription>LE</decription>
+            <id>89</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>LC</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>90</value>
+            </attributeList>
+            <decription>LC</decription>
+            <id>90</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI EXTRANJERA</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>91</value>
+            </attributeList>
+            <decription>CI EXTRANJERA</decription>
+            <id>91</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>EN TRAMITE</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>92</value>
+            </attributeList>
+            <decription>EN TRAMITE</decription>
+            <id>92</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>ACTA DE NACIMIENTO</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>93</value>
+            </attributeList>
+            <decription>ACTA DE NACIMIENTO</decription>
+            <id>93</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>PASAPORTE</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>94</value>
+            </attributeList>
+            <decription>PASAPORTE</decription>
+            <id>94</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CI BS. AS. RNP</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>95</value>
+            </attributeList>
+            <decription>CI BS. AS. RNP</decription>
+            <id>95</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>DNI</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>96</value>
+            </attributeList>
+            <decription>DNI</decription>
+            <id>96</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>SIN IDENTIFICAR / VENTA GLOBAL DIARIA</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>99</value>
+            </attributeList>
+            <decription>SIN IDENTIFICAR / VENTA GLOBAL DIARIA</decription>
+            <id>99</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>CERTIFICADO DE MIGRACION</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>30</value>
+            </attributeList>
+            <decription>CERTIFICADO DE MIGRACION</decription>
+            <id>30</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>DESCRIPCION</name>
+              <value>USADO POR ANSES PARA PADRON</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_TIPO_DOCUMENTO</name>
+              <value>88</value>
+            </attributeList>
+            <decription>USADO POR ANSES PARA PADRON</decription>
+            <id>88</id>
+          </parameterList>
+        </parameterCollection>
+      </parameterCollectionReturn>
+    </ns2:getParameterCollectionByNameResponse>
+  </soap:Body>
+</soap:Envelope>

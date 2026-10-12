@@ -135,7 +135,11 @@ class SaleInvoiceRepository
 
     public function find(Request $request)
     {
-        $query = SaleInvoices::query();
+        // `remitos` se carga siempre: el PDF de la factura tiene que imprimir el
+        // "Número del o los remitos" vinculados (RG 1415, Anexo II, Apartado A,
+        // Título I, inciso e). Va acá y no en el transformador para que sea UNA
+        // consulta y no una por factura.
+        $query = SaleInvoices::query()->with('remitos');
 
         // Filtrar por compañía
         $query->where('company_id', (int) $request->company_id);

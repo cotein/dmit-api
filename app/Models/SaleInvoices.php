@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Company;
 use App\Models\Customer;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -34,6 +35,22 @@ class SaleInvoices extends Model
     public function voucher(): HasOne
     {
         return $this->hasOne(AfipVoucher::class, 'id', 'voucher_id');
+    }
+
+    /**
+     * Remitos que esta factura respalda.
+     *
+     * La RG 1415, Anexo II, Apartado A, Título I, inciso e) obliga a que el
+     * comprobante consigne el "Número del o los remitos emitidos y vinculados
+     * con la operación": pueden ser varios. Y un mismo remito puede facturarse
+     * en varias facturas (entregas parciales), así que la relación es de varios
+     * a varios y el pivote guarda `importe`.
+     */
+    public function remitos(): BelongsToMany
+    {
+        return $this->belongsToMany(Remito::class, 'remito_sale_invoice', 'sale_invoice_id', 'remito_id')
+            ->withPivot('importe')
+            ->withTimestamps();
     }
 
     public function saleCondition(): HasOne

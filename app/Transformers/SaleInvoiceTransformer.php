@@ -371,6 +371,28 @@ class SaleInvoiceTransformer extends TransformerAbstract
 
             'items' => $this->items($si),
             'comment' => ($si->comments()->exists()) ? $si->comments->comment : '',
+
+            /*
+             * Remitos que respalda esta factura.
+             *
+             * La RG 1415, Anexo II, Apartado A, Título I, inciso e) obliga a
+             * consignar en el comprobante el "Número del o los remitos emitidos
+             * y vinculados con la operación": pueden ser varios. Es lo que el PDF
+             * imprime en su bloque REMITOS ASOCIADOS.
+             *
+             * La relación ya viene cargada desde el repositorio (with('remitos')),
+             * así que esto no dispara una consulta por factura.
+             */
+            'remitos' => $si->remitos
+                ->map(fn ($remito) => [
+                    'id' => $remito->id,
+                    'numero' => $remito->number
+                        ? str_pad((string) $remito->pto_vta, 5, '0', STR_PAD_LEFT)
+                            .'-'.str_pad((string) $remito->number, 8, '0', STR_PAD_LEFT)
+                        : null,
+                    'importe' => (float) $remito->pivot->importe,
+                ])
+                ->values(),
         ];
     }
 }

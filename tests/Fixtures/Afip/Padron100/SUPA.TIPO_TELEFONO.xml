@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <ns2:getParameterCollectionByNameResponse xmlns:ns2="http://a100.soap.ws.server.pucParam.sr/">
+      <parameterCollectionReturn>
+        <metadata>
+          <fechaHora>2017-05-05T10:54:45.034-03:00</fechaHora>
+          <servidor>awshomo.afip.gov.ar</servidor>
+        </metadata>
+        <parameterCollection>
+          <name>SUPA.E_PROVINCIA</name>
+<!-- FIXTURE, no es una respuesta real de ARCA.
+     Caso "nombre que no coincide": el manual pide SUPA.TIPO_TELEFONO y la respuesta vuelve con SUPA.E_PROVINCIA (2 provincias del ejemplo, §3.2.3).
+     Tiene la forma exacta del manual v2.1 (sobre SOAP, namespace, metadata,
+     parameterList/attributeList/id) y los códigos del catálogo que el sistema
+     tiene hoy cargado a mano, escritos como los escribe ARCA (mayúsculas, sin
+     acentos). Los valores reales sólo salen del servicio. -->
+
+          <parameterList>
+            <attributeList>
+              <name>NOMBRE_PROVINCIA</name>
+              <value>MISIONES</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_PROVINCIA</name>
+              <value>19</value>
+            </attributeList>
+            <attributeList>
+              <name>CODIGO_SIM_PROVINCIA</name>
+              <value>MI</value>
+            </attributeList>
+            <decription>MISIONES</decription>
+            <id>19</id>
+          </parameterList>
+          <parameterList>
+            <attributeList>
+              <name>NOMBRE_PROVINCIA</name>
+              <value>RIO NEGRO</value>
+            </attributeList>
+            <attributeList>
+              <name>COD_PROVINCIA</name>
+              <value>22</value>
+            </attributeList>
+            <attributeList>
+              <name>CODIGO_SIM_PROVINCIA</name>
+              <value>RN</value>
+            </attributeList>
+            <decription>RIO NEGRO</decription>
+            <id>22</id>
+          </parameterList>
+        </parameterCollection>
+      </parameterCollectionReturn>
+    </ns2:getParameterCollectionByNameResponse>
+  </soap:Body>
+</soap:Envelope>
