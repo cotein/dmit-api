@@ -3,23 +3,26 @@
 namespace App\Http\Controllers\Api;
 
 use Carbon\Carbon;
+use App\Models\PlanUsageReservation;
 use App\Src\Constantes;
 use Illuminate\Http\Request;
 use App\Events\CreatedInvoice;
 use App\Src\Afip\ArcaResponse;
 use App\Src\Helpers\ActivityLog;
+use App\Src\Services\Plans\PlanGate;
 use App\Http\Controllers\Controller;
 use App\Src\Afip\WSFacturaElectronica;
 use Spatie\Activitylog\Facades\LogBatch;
 use App\Exceptions\Afip\AfipRejectionException;
 use App\Exceptions\Afip\FEParamGetPtosVentaException;
+use Throwable;
 
 class AfipFacturaElectronicaController extends Controller
 {
 
     protected $afipWS;
 
-    public function __construct(WSFacturaElectronica $afipWS)
+    public function __construct(WSFacturaElectronica $afipWS, private readonly PlanGate $planGate)
     {
         $this->afipWS = $afipWS;
     }
@@ -76,11 +79,93 @@ class AfipFacturaElectronicaController extends Controller
 
         $invoiceData = $this->prepareInvoiceData($request);
 
+        // El corte por tope, ANTES de llamar al organismo. La reserva se toma acá y
+        // se confirma recién cuando el comprobante existe; si ARCA rechaza, el lugar
+        // se libera y no se consume nada.
+        $reservation = $this->reservarLugar($request);
+
         if ($request->isMiPyme) {
-            return $this->solicitarFacturaDeCredito($request, $invoiceData);
+            return $this->solicitarFacturaDeCredito($request, $invoiceData, $reservation);
         }
 
-        return $this->solicitarComprobante($request, $invoiceData);
+        return $this->solicitarComprobante($request, $invoiceData, $reservation);
+    }
+
+    /**
+     * Toma el lugar del contador antes de llamar al organismo.
+     *
+     * Devuelve null cuando no hay nada que cortar: el interruptor del CUIT está
+     * apagado, el plan no tiene tope para este recurso, o el comprobante es una nota
+     * de crédito o débito (que son la única salida para corregir un error y por eso
+     * nunca se bloquean ni consumen).
+     *
+     * La clave de idempotencia se arma con lo que identifica al comprobante, así el
+     * reintento del mismo pedido no consume dos veces ni emite dos veces.
+     */
+    private function reservarLugar(Request $request): ?PlanUsageReservation
+    {
+        $resource = $this->planGate->resourceForVoucherCode($request->FeCabReq['CbteTipo'] ?? null);
+
+        if ($resource === null) {
+            return null;
+        }
+
+        $companyId = (int) $request->company_id;
+
+        $clave = $this->planGate->keyFor([
+            'company_id' => $companyId,
+            'pto_vta' => $request->FeCabReq['PtoVta'] ?? null,
+            'cbte_tipo' => $request->FeCabReq['CbteTipo'] ?? null,
+            'cbte_fch' => $request->FECAEDetRequest['CbteFch'] ?? null,
+            'imp_total' => $request->FECAEDetRequest['ImpTotal'] ?? null,
+            'cliente' => $request->customer['cuit'] ?? ($request->customer['id'] ?? null),
+            'items' => count($request->products ?? []),
+        ]);
+
+        return $this->planGate->reserve($companyId, $resource, $clave);
+    }
+
+    /**
+     * Registra el consumo cuando el comprobante ya existe, o libera el lugar cuando
+     * la emisión no terminó en comprobante.
+     *
+     * Ojo con el orden: el `catch` cubre tanto el rechazo de ARCA como un fallo al
+     * guardar la factura. En los dos casos el lugar vuelve, porque no hay
+     * comprobante que contar.
+     *
+     * @param  callable():mixed  $emision  devuelve el comprobante creado (array con 'id') o null
+     */
+    private function liquidarLugar(?PlanUsageReservation $reservation, callable $emision): mixed
+    {
+        try {
+            $resultado = $emision();
+        } catch (Throwable $e) {
+            $this->planGate->release($reservation);
+
+            throw $e;
+        }
+
+        $this->planGate->confirm($reservation, $this->idDeComprobante($resultado));
+
+        return $resultado;
+    }
+
+    /**
+     * El id del comprobante recién creado, para dejarlo anotado en la reserva.
+     *
+     * @param  mixed  $comprobante
+     */
+    private function idDeComprobante($comprobante): ?int
+    {
+        if (is_array($comprobante) && isset($comprobante['id'])) {
+            return (int) $comprobante['id'];
+        }
+
+        if (is_object($comprobante) && isset($comprobante->id)) {
+            return (int) $comprobante->id;
+        }
+
+        return null;
     }
 
     /**
@@ -89,7 +174,7 @@ class AfipFacturaElectronicaController extends Controller
      * @param  array<string, mixed>  $invoiceData
      * @return \Illuminate\Http\JsonResponse
      */
-    private function solicitarFacturaDeCredito(Request $request, array $invoiceData)
+    private function solicitarFacturaDeCredito(Request $request, array $invoiceData, ?PlanUsageReservation $reservation = null)
     {
         $invoiceResult = $this->afipWS->FECAESolicitar($request->all());
 
@@ -99,11 +184,15 @@ class AfipFacturaElectronicaController extends Controller
 
         $this->registrarRespuestaDeArca($request, $invoiceData['result']);
 
-        // Si ARCA no autorizó, no se registra nada: el usuario tiene que ver el motivo y el
-        // comprobante no existe (sin CAE no hay factura).
-        $this->abortarSiArcaRechazo($arca, $request);
+        // El consumo se registra con el comprobante ya creado, o el lugar vuelve si
+        // ARCA rechazó (sin CAE no hay factura y no hay nada que contar).
+        $invoice = $this->liquidarLugar($reservation, function () use ($arca, $request, $invoiceData) {
+            // Si ARCA no autorizó, no se registra nada: el usuario tiene que ver el motivo y el
+            // comprobante no existe (sin CAE no hay factura).
+            $this->abortarSiArcaRechazo($arca, $request);
 
-        $invoice = CreatedInvoice::dispatch($invoiceData);
+            return CreatedInvoice::dispatch($invoiceData);
+        });
 
         return response()->json([
             'CbteTipo' => $invoiceData['FeCabReq']['CbteTipo'],
@@ -119,7 +208,7 @@ class AfipFacturaElectronicaController extends Controller
      * @param  array<string, mixed>  $invoiceData
      * @return \Illuminate\Http\JsonResponse
      */
-    private function solicitarComprobante(Request $request, array $invoiceData)
+    private function solicitarComprobante(Request $request, array $invoiceData, ?PlanUsageReservation $reservation = null)
     {
         $clonedRequest = $this->sinFechasDeServicioSiEsProducto($request->all());
 
@@ -138,6 +227,11 @@ class AfipFacturaElectronicaController extends Controller
             $clonedRequest['FECAEDetRequest']['CbteDesde'] = $ultimoAutorizado->FECompUltimoAutorizadoResult->CbteNro + 1;
 
             $clonedRequest['FECAEDetRequest']['CbteHasta'] = $ultimoAutorizado->FECompUltimoAutorizadoResult->CbteNro + 1;
+
+            // Este camino NO emite: le pide al frontend que confirme el comprobante
+            // como Factura de Crédito MiPyME. No hay comprobante que contar todavía,
+            // así que el lugar vuelve y se toma de nuevo cuando el usuario confirme.
+            $this->planGate->release($reservation);
 
             return response()->json([
                 'isMipyme' => true,
@@ -180,9 +274,13 @@ class AfipFacturaElectronicaController extends Controller
 
         // Igual que en MiPyme: si ARCA rechazó, la factura no se guarda y el motivo viaja al usuario.
         try {
-            $this->abortarSiArcaRechazo($arca, $request);
+            // El consumo del plan se registra con el comprobante ya creado. Si ARCA
+            // rechaza, `liquidarLugar` libera el lugar: sin comprobante no se cuenta.
+            $invoice = $this->liquidarLugar($reservation, function () use ($arca, $request, $invoiceData) {
+                $this->abortarSiArcaRechazo($arca, $request);
 
-            $invoice = CreatedInvoice::dispatch($invoiceData);
+                return CreatedInvoice::dispatch($invoiceData);
+            });
         } finally {
             LogBatch::getUuid();
             LogBatch::endBatch();

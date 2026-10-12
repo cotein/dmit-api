@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\PaymentTypeController;
 use App\Http\Controllers\Api\SaleInvoiceController;
 use App\Http\Controllers\Api\SaleConditionController;
 use App\Http\Controllers\Api\CotController;
+use App\Http\Controllers\Api\RemitoController;
 use App\Http\Controllers\Api\AfipInscriptionController;
 use App\Http\Controllers\Api\EmailVerificationController;
 use App\Http\Controllers\Api\AfipFacturaElectronicaController;
@@ -30,11 +31,17 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\MercadoPagoController;
 use App\Http\Controllers\Api\MercadoPagoWebhookController;
 use App\Http\Controllers\Api\MercadoPagoCallbackController;
+use App\Http\Controllers\Api\MercadoLibreController;
+use App\Http\Controllers\Api\MercadoLibreWebhookController;
+use App\Http\Controllers\Api\MercadoLibreCallbackController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Api\PasswordCodeController;
 use App\Http\Controllers\Api\TwoFactorController;
 use App\Http\Controllers\Api\MailController;
+use App\Http\Controllers\Api\PlanController;
+use App\Http\Controllers\Api\PlanAdminController;
+use App\Http\Middleware\EnsurePlanAdmin;
 
 Route::get('updates', [DashBoardController::class, 'updates']);
 Route::post('register', [RegisterController::class, 'register']);
@@ -78,6 +85,12 @@ Route::get('status', function () {
 Route::prefix('api')->group(function () {
     Route::post('mercado-pago/webhook', MercadoPagoWebhookController::class);
     Route::get('mercado-pago/callback', MercadoPagoCallbackController::class);
+
+    // MercadoLibre · mismas dos excepciones y por los mismos motivos:
+    //   - webhook: lo llama MercadoLibre y tiene que responder en menos de 500 ms,
+    //   - callback: es el navegador volviendo del OAuth, con la empresa firmada en el `state`.
+    Route::post('mercadolibre/webhook', MercadoLibreWebhookController::class);
+    Route::get('mercadolibre/callback', MercadoLibreCallbackController::class);
 });
 
 Route::middleware(['auth:api'])->group(function () {
@@ -131,6 +144,26 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('{cot}/anular', [CotController::class, 'anular']);
         });
 
+        // Remitos: el documento que ampara el traslado y la entrega de bienes
+        // (RG 1415, Anexo V). No es un comprobante fiscal: se emite ANTES de
+        // facturar y después se vincula con una o varias facturas.
+        //
+        // `pendientes` va declarada ANTES de `{remito}`, si no Laravel intenta
+        // resolver "pendientes" como si fuera un id de remito.
+        Route::prefix('remitos')->group(function () {
+            Route::get('pendientes', [RemitoController::class, 'pendientes']);
+            Route::get('de-factura/{saleInvoice}', [RemitoController::class, 'deFactura']);
+            Route::post('vincular-factura', [RemitoController::class, 'vincularFactura']);
+            Route::get('/', [RemitoController::class, 'index']);
+            Route::post('/', [RemitoController::class, 'store']);
+            Route::get('{remito}', [RemitoController::class, 'show']);
+            Route::put('{remito}', [RemitoController::class, 'update']);
+            Route::delete('{remito}', [RemitoController::class, 'destroy']);
+            Route::get('{remito}/pdf', [RemitoController::class, 'pdf']);
+            Route::post('{remito}/emitir', [RemitoController::class, 'emitir']);
+            Route::post('{remito}/anular', [RemitoController::class, 'anular']);
+        });
+
         // Pagos recibidos: una fila por pago (receipt_payments), no por recibo.
         Route::get('receipt-payments', [ReceiptPaymentController::class, 'index']);
 
@@ -159,6 +192,30 @@ Route::middleware(['auth:api'])->group(function () {
             Route::post('reconcile', [MercadoPagoController::class, 'reconcile']);
         });
 
+        // MercadoLibre: publicaciones del vendedor, conciliación con el catálogo
+        // local, precio/stock hacia MercadoLibre y ventas como pedidos.
+        Route::prefix('mercadolibre')->group(function () {
+            Route::get('account', [MercadoLibreController::class, 'account']);
+            Route::get('connect', [MercadoLibreController::class, 'connect']);
+            Route::delete('account', [MercadoLibreController::class, 'disconnect']);
+
+            Route::get('items', [MercadoLibreController::class, 'items']);
+            Route::get('items/unmatched', [MercadoLibreController::class, 'unmatched']);
+            Route::post('items/{item}/link', [MercadoLibreController::class, 'link']);
+            Route::post('items/{item}/unlink', [MercadoLibreController::class, 'unlink']);
+            Route::post('items/{item}/ignore', [MercadoLibreController::class, 'ignore']);
+            Route::post('items/{item}/import-as-product', [MercadoLibreController::class, 'importAsProduct']);
+            Route::post('items/{item}/push', [MercadoLibreController::class, 'pushItem']);
+            Route::post('items/{item}/status', [MercadoLibreController::class, 'changeStatus']);
+            Route::post('rematch', [MercadoLibreController::class, 'rematch']);
+
+            Route::post('sync', [MercadoLibreController::class, 'sync']);
+            Route::post('push', [MercadoLibreController::class, 'push']);
+            Route::post('orders/import', [MercadoLibreController::class, 'importOrders']);
+            Route::post('products/{product}/publish', [MercadoLibreController::class, 'publish']);
+            Route::get('logs', [MercadoLibreController::class, 'logs']);
+        });
+
         // Suscripción de la empresa a un plan de DMIT (se cobra con las
         // credenciales de plataforma, no con el OAuth del comercio).
         Route::prefix('subscription')->group(function () {
@@ -166,6 +223,28 @@ Route::middleware(['auth:api'])->group(function () {
             Route::get('/', [SubscriptionController::class, 'current']);
             Route::post('/', [SubscriptionController::class, 'store']);
             Route::post('cancel', [SubscriptionController::class, 'cancel']);
+        });
+
+        // Plan del CUIT activo: qué rige, cuánto se usó y cómo se cambia. Es lo que
+        // alimenta el contador de la pantalla; quien decide si se puede emitir es el
+        // camino de emisión, con el contador real.
+        Route::prefix('plan')->group(function () {
+            Route::get('/', [PlanController::class, 'show']);
+            Route::get('catalog', [PlanController::class, 'catalog']);
+            Route::post('change', [PlanController::class, 'change']);
+            Route::get('history', [PlanController::class, 'history']);
+        });
+
+        // Configuración INTERNA del corte de planes: interruptores, recálculo,
+        // saneamiento y asignación de planes. No es pantalla de cliente: se protege
+        // con el secreto de operación o con el permiso CREAR COMPAÑIA.
+        Route::prefix('internal/plan')->middleware(EnsurePlanAdmin::class)->group(function () {
+            Route::get('state', [PlanAdminController::class, 'state']);
+            Route::put('switches', [PlanAdminController::class, 'switches']);
+            Route::post('sanitize', [PlanAdminController::class, 'sanitize']);
+            Route::post('recalculate', [PlanAdminController::class, 'recalculate']);
+            Route::post('assign', [PlanAdminController::class, 'assign']);
+            Route::post('backfill', [PlanAdminController::class, 'backfill']);
         });
 
         Route::apiResources([
